@@ -1,0 +1,60 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "title": "Ноутбук Apple MacBook Air 13",
+      "price": 999.99,
+      "category": "Электроника",
+      "description": "Легкий и мощный ноутбук с чипом M1, 8GB RAM, 256GB SSD",
+      "rating": 4.8
+    },
+    {
+      "id": 2,
+      "title": "Смартфон Samsung Galaxy S23",
+      "price": 799.5,
+      "category": "Смартфоны",
+      "description": "Флагманский смартфон с 6.1-дюймовым AMOLED экраном и камерой 50MP",
+      "rating": 4.6
+    },
+    {
+      "id": 3,
+      "title": "Наушники Sony WH-1000XM5",
+      "price": 349.0,
+      "category": "Аудио",
+      "description": "Беспроводные наушники с активным шумоподавлением и отличным звуком",
+      "rating": 4.9
+    },
+    {
+      "id": 4,
+      "title": "Клавиатура Logitech MX Keys",
+      "price": 99.99,
+      "category": "Компьютерные аксессуары",
+      "description": "Беспроводная клавиатура с подсветкой и эргономичным дизайном",
+      "rating": 4.5
+    },
+    {
+      "id": 5,
+      "title": "Монитор Dell UltraSharp U2723QE",
+      "price": 649.0,
+      "category": "Электроника",
+      "description": "27-дюймовый 4K монитор с IPS панелью и USB-C подключением",
+      "rating": 4.7
+    },
+    {
+      "id": 6,
+      "title": "Фитнес-браслет Xiaomi Mi Band 7",
+      "price": 49.99,
+      "category": "Гаджеты",
+      "description": "Умный браслет с отслеживанием активности, пульса и сна",
+      "rating": 4.3
+    },
+    {
+      "id": 7,
+      "title": "Книга 'Изучаем Python' Марк Лутц",
+      "price": 59.9,
+      "category": "Книги",
+      "description": "Полное руководство по Python для начинающих и опытных разработчиков",
+      "rating": 4.8
+    }
+  ]
+}
