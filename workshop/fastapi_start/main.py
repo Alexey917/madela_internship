@@ -1,10 +1,20 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 from sqlalchemy import select
 from typing import Annotated
-from pydantic import BaseModel
+from authx import AuthX, AuthXConfig
 
-from fastapi import FastAPI, Depends
+from schemas import BookSchema, BookAddSchema, LoginSchema
+from models import Base, BookModel
+
+from fastapi import FastAPI, Depends, HTTPException, Response
+
+config = AuthXConfig()
+config.JWT_SECRET_KEY = 'SECRET_KEY' # секретный ключ
+config.JWT_ACCESS_COOKIE_NAME = "my_access_token" # имя токена
+config.JWT_TOKEN_LOCATION = ["cookies"]  # как хранить токен
+
+security = AuthX(config=config)
 
 engine = create_async_engine('sqlite+aiosqlite:///books.db')  # создали бд books.db
 
@@ -17,27 +27,6 @@ async def get_session():
         yield session
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class BookModel(Base):
-    __tablename__ = 'books'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    author: Mapped[str] 
-
-
-class BookSchema(BaseModel):
-    title: str
-    author: str
-
-class BookAddSchema(BookSchema):
-    id: int
-
 
 
 @app.post("/setup_database")  # обычно так не делают, это чисто для примера
@@ -67,3 +56,17 @@ async def get_books(session: SessionDep):
     query = select(BookModel)
     result = await session.execute(query)  # исполни код query
     return result.scalars().all()  # result это итератор
+
+
+@app.post("/login")
+def login(creds: LoginSchema, response: Response):
+    if creds.username == 'test' and creds.password == 'test':
+        token = security.create_access_token(uid="12345")
+        response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token) # response - наш ответ фронту, т.е в ответе устанавливаем токен в куки и передаем с запросом
+        return { "access_token": token }
+    raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+
+@app.get("/protected", dependencies=[Depends(security.access_token_required)]) # тут еще 500 ошибка в случае отсутствия кук, а должна быть 403
+def protected():
+    return { "data": "TOP Secret" }
