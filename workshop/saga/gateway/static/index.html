@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gateway Shop — Catalog + Saga</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --line:#e5e7eb; --ok:#0a7; --bad:#d92d20; --blue:#175cd3; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui,-apple-system,sans-serif; max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; background: var(--bg); color:#111; }
+  header { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+  header h1 { font-size:1.4rem; margin:0; }
+  .badges { display:flex; gap:.4rem; margin-left:auto; font-size:12px; }
+  .badge { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; background:#999; vertical-align:middle;}
+  .dot.ok { background:var(--ok);} .dot.bad { background:var(--bad);}
+  .grid { display:grid; grid-template-columns: 1.5fr 1fr; gap:1rem; margin-top:1rem; }
+  @media (max-width:850px){ .grid{grid-template-columns:1fr;} }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:1rem; margin-bottom:1rem; }
+  .card h3 { margin:.2rem 0 .8rem; font-size:.95rem; }
+  .toolbar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.6rem; }
+  input,select { border:1px solid #ccc; border-radius:7px; padding:8px; font-size:13px; }
+  button { background:#111; color:#fff; border:0; border-radius:7px; padding:8px 12px; cursor:pointer; font-size:13px; }
+  button:hover{opacity:.88} button:disabled{opacity:.4; cursor:default}
+  button.add{background:var(--ok)} button.buy{background:var(--blue); font-size:14px; padding:10px 16px; width:100%; margin-top:.5rem;}
+  button.ghost{background:#fff; color:#111; border:1px solid var(--line);}
+  button.danger{background:var(--bad)}
+  code{background:#eee; padding:1px 6px; border-radius:5px; font-size:12px;}
+  table{width:100%; border-collapse:collapse;}
+  th,td{text-align:left; padding:7px 6px; border-bottom:1px solid #f0f0f0; font-size:13px;}
+  .scroll{max-height:560px; overflow:auto; border:1px solid #f0f0f0; border-radius:8px;}
+  .qty{display:inline-flex; align-items:center; gap:6px;}
+  .qty button{padding:2px 9px;}
+  .total{font-size:1.05rem; margin:.6rem 0;}
+  .saga{font-size:12px; background:#f4f4f5; border-radius:7px; padding:8px; margin-top:6px; white-space:pre-wrap; font-family:ui-monospace,monospace;}
+  .saga .fail{color:var(--bad)} .saga .win{color:var(--ok)}
+  .pill{font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; text-transform:uppercase;}
+  .pill.confirmed{background:#dcfae6; color:#067647;} .pill.cancelled,.pill.failed{background:#fee4e2; color:#b42318;} .pill.pending{background:#fef0c7; color:#b54708;}
+  .order{border-bottom:1px solid var(--line); padding:8px 0;}
+  .order small{color:#555}
+  #msg{margin-top:.6rem; font-size:13px;}
+  details summary{cursor:pointer; font-size:12px; color:#555;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛒 Gateway Shop <span style="font-weight:400;font-size:.9rem">catalog → bucket → saga checkout</span></h1>
+  <div class="badges">
+    <span class="badge"><span id="d-gw" class="dot"></span>gateway</span>
+    <span class="badge"><span id="d-cat" class="dot"></span>catalog</span>
+    <span class="badge"><span id="d-ord" class="dot"></span>orders</span>
+  </div>
+</header>
+<p style="font-size:12px;color:#555">Saga: <code>reserve → payment(mock) → confirm</code> / on fail: <code>cancel (compensation)</code>. Try customer <code>fail</code> or product <code>#17</code> (stock 0).</p>
+
+<div class="grid">
+  <section class="card">
+    <h3>Catalog <code>GET /api/products</code> <span id="count"></span></h3>
+    <div class="toolbar">
+      <input id="q" placeholder="🔍 filter name…" style="flex:1" oninput="renderCatalog()" />
+      <select id="cat" onchange="renderCatalog()"><option value="">all categories</option></select>
+      <select id="sort" onchange="renderCatalog()">
+        <option value="id">sort: id</option>
+        <option value="price-asc">price ↑</option>
+        <option value="price-desc">price ↓</option>
+      </select>
+      <button class="ghost" onclick="loadProducts()">↻</button>
+      <button class="ghost" onclick="resetCatalog()" title="POST /api/catalog/reset">reset stock</button>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th style="text-align:right">Bucket</th></tr></thead>
+        <tbody id="catalogRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div>
+    <section class="card">
+      <h3>🧺 Bucket <span id="bucketCount"></span></h3>
+      <input id="customer" placeholder="customer (use 'fail' to test rollback)" style="width:100%" />
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th style="text-align:right">Sum</th></tr></thead>
+        <tbody id="bucketRows"></tbody>
+      </table>
+      <div class="total">Total: <b>$<span id="bucketTotal">0.00</span></b></div>
+      <button class="buy" id="buyBtn" onclick="buy()">Buy bucket — pay by price → POST /api/checkout</button>
+      <div class="toolbar" style="margin-top:.5rem">
+        <button class="ghost" onclick="clearBucket()">clear</button>
+        <button class="ghost" onclick="demoFail()">demo: payment fail</button>
+        <button class="ghost" onclick="demoOOS()">demo: out-of-stock #17</button>
+      </div>
+      <div id="msg"></div>
+    </section>
+
+    <section class="card">
+      <h3>Orders <code>GET /api/orders</code> <button class="ghost" onclick="loadOrders()">↻</button></h3>
+      <div id="orders"><small>loading…</small></div>
+    </section>
+  </div>
+</div>
+
+<script>
+let products = [];
+let bucket = JSON.parse(localStorage.getItem('bucket_v1') || '{}'); // {pid: qty}
+const $ = id => document.getElementById(id);
+const money = n => '$' + Number(n).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- health ----------
+async function health() {
+  try {
+    const h = await (await fetch('/health')).json();
+    set('d-gw', true);
+    set('d-cat', h.catalog_service?.status === 'ok');
+    set('d-ord', h.orders_service?.status === 'ok');
+  } catch { set('d-gw', false); set('d-cat', false); set('d-ord', false); }
+  function set(id, ok) { $(id).className = 'dot ' + (ok ? 'ok' : 'bad'); }
+}
+
+// ---------- catalog ----------
+async function loadProducts() {
+  const r = await fetch('/api/products');
+  products = r.ok ? await r.json() : [];
+  const cats = [...new Set(products.map(p => p.category))].sort();
+  $('cat').innerHTML = '<option value="">all categories</option>' + cats.map(c => `<option>${c}</option>`).join('');
+  $('count').textContent = `(${products.length})`;
+  renderCatalog(); renderBucket();
+}
+function renderCatalog() {
+  const q = ($('q').value || '').toLowerCase();
+  const cat = $('cat').value, sort = $('sort').value;
+  let list = products.filter(p =>
+    p.name.toLowerCase().includes(q) && (!cat || p.category === cat));
+  if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
+  if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
+  $('catalogRows').innerHTML = list.map(p => {
+    const inBucket = bucket[p.id] || 0;
+    const left = p.stock - inBucket;
+    return `<tr>
+      <td>${p.id}</td>
+      <td>${esc(p.name)}<br><small style="color:#777">${esc(p.category)}</small></td>
+      <td><b>${money(p.price)}</b></td>
+      <td>${p.stock === 0 ? '<b style="color:red">0</b>' : p.stock}${inBucket ? `<br><small>in 🧺${inBucket}</small>` : ''}</td>
+      <td style="text-align:right"><button class="add" onclick="add(${p.id})" ${left <= 0 ? 'disabled' : ''}>+ Add</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan=5>no goods</td></tr>';
+}
+async function resetCatalog() {
+  await fetch('/api/catalog/reset', { method: 'POST' });
+  loadProducts();
+}
+
+// ---------- bucket ----------
+function save() { localStorage.setItem('bucket_v1', JSON.stringify(bucket)); }
+function add(pid, n = 1) {
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  bucket[pid] = Math.min((bucket[pid] || 0) + n, Math.max(p.stock, 0));
+  if (bucket[pid] <= 0) delete bucket[pid];
+  save(); renderBucket(); renderCatalog();
+}
+function dec(pid, n = 1) {
+  bucket[pid] = (bucket[pid] || 0) - n;
+  if (bucket[pid] <= 0) delete bucket[pid];
+  save(); renderBucket(); renderCatalog();
+}
+function clearBucket() { bucket = {}; save(); renderBucket(); renderCatalog(); }
+function totals() {
+  let total = 0, count = 0;
+  for (const [pid, qty] of Object.entries(bucket)) {
+    const p = products.find(x => x.id == pid);
+    if (!p) continue;
+    total += p.price * qty; count += qty;
+  }
+  return { total, count };
+}
+function renderBucket() {
+  const { total, count } = totals();
+  $('bucketTotal').textContent = total.toFixed(2);
+  $('bucketCount').textContent = count ? `(${count})` : '';
+  $('buyBtn').disabled = count === 0;
+  $('bucketRows').innerHTML = Object.entries(bucket).map(([pid, qty]) => {
+    const p = products.find(x => x.id == pid);
+    if (!p) return '';
+    return `<tr>
+      <td>${esc(p.name)}<br><small>${money(p.price)} each</small></td>
+      <td><span class="qty"><button onclick="dec(${p.id})">−</button><b>${qty}</b><button onclick="add(${p.id})">+</button></span></td>
+      <td style="text-align:right"><b>${money(p.price * qty)}</b><br><button class="ghost" onclick="dec(${p.id},999)">remove</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan=3 style="color:#777">empty — add goods from catalog ←</td></tr>';
+}
+
+// ---------- saga checkout ----------
+function sagaHtml(saga = []) {
+  return `<div class="saga">${saga.map(s => {
+    const bad = /fail|abort|error|cancelled/i.test(s);
+    return `<div class="${bad ? 'fail' : 'win'}">${esc(s)}</div>`;
+  }).join('')}</div>`;
+}
+function extractOrder(data) {
+  // gateway proxies FastAPI errors as {"detail": {...}} ; success as order itself
+  return data?.id ? data : (data?.order || data?.detail?.order || null);
+}
+async function buy() {
+  const customer = $('customer').value.trim() || 'guest';
+  const items = Object.entries(bucket).map(([product_id, qty]) => ({ product_id: +product_id, qty }));
+  if (!items.length) return;
+  $('buyBtn').disabled = true;
+  $('msg').innerHTML = '⏳ saga running: <code>reserve → pay → confirm</code>…';
+  try {
+    const r = await fetch('/api/checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer, items })
+    });
+    const data = await r.json();
+    const order = extractOrder(data);
+    const err = data?.detail?.error || data?.error;
+    $('msg').innerHTML = r.ok && order
+      ? `<p style="color:var(--ok)"><b>✅ order #${order.id} CONFIRMED — ${money(order.total)}</b></p>${sagaHtml(order.saga)}`
+      : `<p style="color:var(--bad)"><b>❌ ${esc(err || ('HTTP ' + r.status))}</b><br><small>${esc(data?.detail?.reason || data?.detail?.catalog_detail || '')}</small></p>${order ? sagaHtml(order.saga) : `<div class="saga">${esc(JSON.stringify(data).slice(0, 500))}</div>`}`;
+    if (r.ok) { clearBucket(); }
+  } catch (e) {
+    $('msg').innerHTML = `<p style="color:var(--bad)">❌ network: ${esc(e.message)}</p>`;
+  }
+  $('buyBtn').disabled = false;
+  loadOrders(); loadProducts();
+}
+function demoFail() { $('customer').value = 'fail'; if (!Object.keys(bucket).length && products.length) add(products[0].id); buy(); }
+function demoOOS() { clearBucket(); bucket = { 17: 1 }; save(); renderBucket(); $('customer').value = 'guest'; buy(); }
+
+// ---------- orders ----------
+async function loadOrders() {
+  const r = await fetch('/api/orders');
+  const orders = r.ok ? await r.json() : [];
+  $('orders').innerHTML = [...orders].reverse().map(o => `
+    <div class="order">
+      <b>#${o.id}</b> ${esc(o.customer)} — <b>${money(o.total ?? 0)}</b>
+      <span class="pill ${o.status}">${o.status}</span><br>
+      <small>${(o.items || []).map(i => `${esc(i.name)}×${i.qty} (${money(i.price)})`).join(', ') || '—'}</small>
+      ${o.reservation_id ? `<br><small>reservation: ${o.reservation_id}</small>` : ''}
+      ${(o.saga?.length) ? `<details><summary>saga trace (${o.saga.length})</summary>${sagaHtml(o.saga)}</details>` : ''}
+    </div>`).join('') || '<small>no orders yet</small>';
+}
+
+health(); loadProducts(); renderBucket(); loadOrders();
+setInterval(health, 15000);
+</script>
+</body>
+</html>
