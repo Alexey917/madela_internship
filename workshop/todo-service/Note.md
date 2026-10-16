@@ -27,4 +27,19 @@
 27. создаем в папке app файл repository.py там будем писать все наши операции по получению данных с бд
 28. пишем перации по получению данных с бд
 29. создаем scripts/test_repo.py пока нет сервиса для проверки работы с будем
-30. 
+30. перед проверкой scripts/test_repo.py нужно запустить докер
+31. создаем в app файлы dependencies.py и schemas.py, затем папку routers и в ней __init__.py и tasks.py
+32. Пишем схемы
+33. Создаем репо в dependencies кнему будем обращаться за методами для будем
+34. пишем роуты
+35. подключить роуты в main.py app.include_router(tasks.router)
+36. запускаем poetry run uvicorn app.main:app --reload --port 8000 и докер не забудь поднять
+37. тест на создание curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Купить хлеб", "description": "Не забыть"}'
+38. тест на получение данных curl "http://localhost:8000/tasks?page=1&size=10"
+39. тест получить по id curl http://localhost:8000/tasks/1
+40. тест обновление curl -X PUT http://localhost:8000/tasks/1 \
+  -H "Content-Type: application/json" \
+  -d '{"is_done": true}'
+41. тест удаление curl -X DELETE http://localhost:8000/tasks/1

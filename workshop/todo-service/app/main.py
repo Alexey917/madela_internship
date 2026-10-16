@@ -4,6 +4,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import settings
 from app.db import engine
+from app.routers import tasks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,6 +13,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.service_name, lifespan=lifespan)
+
+app.include_router(tasks.router)
 
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
