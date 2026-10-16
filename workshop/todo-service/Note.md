@@ -24,3 +24,7 @@
 24. добавляем подключение бд в main.py и прописываем lifespan
 25. poetry run uvicorn app.main:app --reload --port 8000 проверяем работу
 26. проверяем health check -  curl http://localhost:8000/health
+27. создаем в папке app файл repository.py там будем писать все наши операции по получению данных с бд
+28. пишем перации по получению данных с бд
+29. создаем scripts/test_repo.py пока нет сервиса для проверки работы с будем
+30. 
