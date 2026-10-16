@@ -43,3 +43,22 @@
   -H "Content-Type: application/json" \
   -d '{"is_done": true}'
 41. тест удаление curl -X DELETE http://localhost:8000/tasks/1
+42. создаем cashe.py и в нем устанавливаем клиент, получение и установка данных, также удаление ключей
+43. в main.py закрыть клиент в lifespan await redis_client.aclose()
+44. в dependecies возвращаем клиент через синхронный метод get_cache()
+45. импортируем редис в роуты
+46. создаем логгер
+47. устанавливаем динамический ключ для кеша при получении списка cache_key = f"tasks:page:{page}:size:{size}"
+48. преобразуем в бинарный вид cached = await get_json(cache_key)
+49. если кеш есть, то логируем и возвращаем данные из кеша
+50. если нет кеша, логируем и сохраняем список в кеш
+51. логи для демонстрации, в реальном проекте метрики
+52. в мутирующих запросах перед результатом сбрасываем кеш await delete_pattern("tasks:*")
+53. cache: Redis = Depends(get_cache) - соблюдаем DI-паттерн
+54. запускаем сервис poetry run uvicorn app.main:app --reload --port 8000
+55. проверяем кеш curl "http://localhost:8000/tasks?page=1&size=10" в логах CACHE MISS: tasks:page:1:size:10.
+56. проверяем кеш curl "http://localhost:8000/tasks?page=1&size:10" в логах CACHE HIT: tasks:page:1:size:10.
+57. проверка redis на прямую docker exec -it todo-service-redis-1 redis-cli KEYS "tasks:*"
+58. проверка ttl docker exec -it todo-service-redis-1 redis-cli TTL "tasks:page:1:size:10"
+59. замеры скоростей time curl "http://localhost:8000/tasks?page=1&size=10"  # MISS time curl "http://localhost:8000/tasks?page=1&size=10"  # HIT
+60. 
