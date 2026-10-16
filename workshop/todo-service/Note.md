@@ -61,4 +61,6 @@
 57. проверка redis на прямую docker exec -it todo-service-redis-1 redis-cli KEYS "tasks:*"
 58. проверка ttl docker exec -it todo-service-redis-1 redis-cli TTL "tasks:page:1:size:10"
 59. замеры скоростей time curl "http://localhost:8000/tasks?page=1&size=10"  # MISS time curl "http://localhost:8000/tasks?page=1&size=10"  # HIT
-60. 
+60. создаем .dockerignore
+61. создаем докер файл на build и runtime
+62. добавляем в докер компоуз сервис todo
