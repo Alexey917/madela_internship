@@ -64,3 +64,19 @@
 60. создаем .dockerignore
 61. создаем докер файл на build и runtime
 62. добавляем в докер компоуз сервис todo
+63. устанавливаем старый контейнер docker compose down
+64. собираем образ docker compose build todo
+65. поднимаем все docker compose up -d, docker compose ps
+66. проверка логов docker compose logs todo
+67. проверка curl http://localhost:8000/health
+68. создать entrypoint.sh
+69. добавить настройки для ENTRYPOINT в dockerfile
+70. проверки: curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Проверить Docker", "description": "Работает ли"}' 
+  curl "http://localhost:8000/tasks?page=1&size=10"
+  docker compose logs todo | grep CACHE
+  docker compose exec redis redis-cli KEYS "tasks:*"
+  docker compose exec postgres psql -U todo -d todo_db -c "SELECT id, title, is_done FROM tasks;"
+  
+
