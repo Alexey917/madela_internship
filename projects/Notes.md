@@ -18,7 +18,23 @@
     - [ ] 1.7.5 curl -s http://localhost:8001/metrics | head
 
 
-- [ ] 2: модель + Alembic
+- [ ] 2: **модель + Alembic**
+  - [ ] 2.1: Создание db.py установка пулла соединений с бд и генератора сессий
+  - [ ] 2.2: Создание models.py и описание базы данных
+  - [ ] 2.2: Подключение alembic poetry run alembic init -t async alembic
+  - [ ] 2.3: Закомментировать sqlalchemy.url = driver://user:pass@localhost/dbname в alembic.ini
+  - [ ] 2.4: В env.py alembic'а импортируем настройки конфига, базовый класс из бд и модель
+  - [ ] 2.5: config.set_main_option("sqlalchemy.url", settings.database_url)
+  - [ ] 2.6: Установка метаданных модели target_metadata = Base.metadata
+  - [ ] 2.7: Создание миграции poetry run alembic revision --autogenerate -m "create products table"(не забудь поднять докер)
+  - [ ] 2.8: Применение миграции poetry run alembic upgrade head
+  - [ ] 2.9: Проверка бд:
+    - [ ] 2.9.1: docker exec -it shop-catalog-postgres-1 psql -U catalog -d catalog_db -c "\dt"
+    - [ ] 2.9.2: docker exec -it shop-catalog-postgres-1 psql -U catalog -d catalog_db -c "\d products"
+  - [ ] 2.10: Закрыть соединение с бд в lifespan при shutdown
+  - [ ] 2.11: Проверка работоспособности
+
+
 - [ ] 3: repository
 - [ ] 4: схемы + роутеры
 - [ ] 5: кеш
