@@ -35,7 +35,12 @@
   - [ ] 2.11: Проверка работоспособности
 
 
-- [ ] 3: repository
+- [ ] 3: **repository**
+  - [ ] 3.1: Создание repository.py и класса ProductRepositoty для описания методов list, get, create, update
+  - [ ] 3.2: Создание scripts/test_repo.py (предварительно создать __init__.py и запустить docker) для проверки работы методов
+  - [ ] 3.3: poetry run python -m scripts.test_repo для теста
+
+
 - [ ] 4: схемы + роутеры
 - [ ] 5: кеш
 - [ ] 6: seed

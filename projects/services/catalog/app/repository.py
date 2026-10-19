@@ -72,3 +72,59 @@ class ProductRepository:
         await self.session.commit()
         await self.session.refresh(product)
         return product
+
+
+    async def update(
+            self, 
+            product_id: int,
+            price: Decimal,
+            stock: int,
+            name: str | None = None,
+            is_active: bool | None = None,
+            description: str | None = None,
+            publisher: str | None = None,
+            min_players: int | None = None,
+            max_players: int | None = None,
+            play_time_minutes: int | None = None,
+            min_age: int | None = None,
+    ) -> Product | None:
+        product = await self.session.get(Product, product_id)
+
+        if product is None:
+            return None
+
+        if name is not None:
+            product.name = name
+
+        if price is not None:
+            product.price = price
+
+        if stock is not None:
+            product.stock = stock
+
+        if is_active is not None:
+            product.is_active = is_active
+
+        if description is not None:
+            product.description = description
+
+        if publisher is not None:
+            product.publisher = publisher
+
+        if min_players is not None:
+            product.min_players = min_players
+
+        if max_players is not None:
+            product.max_players = max_players
+
+        if play_time_minutes is not None:
+            product.play_time_minutes = play_time_minutes
+
+        if min_age is not None:
+            product.min_age = min_age
+
+        self.session.add(product)
+        await self.session.commit()
+        await self.session.refresh(product)
+        return product
+        
