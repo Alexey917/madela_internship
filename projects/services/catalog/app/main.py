@@ -6,12 +6,14 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.config import settings
 from app.db import engine
 from app.routes import products
+from app.cache import redis_client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
     await engine.dispose()
+    await redis_client.aclose()
 
 app = FastAPI(title = settings.service_name, lifespan = lifespan)
 Instrumentator().instrument(app).expose(app, endpoint = "/metrics")

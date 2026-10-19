@@ -51,9 +51,26 @@
   - [ ] 4.6: Если есть ошибка в бд, то изменить поля через миграцию poetry run alembic revision -m "fix timestamp column names"
   - [ ] 4.6: В файле fix timestamp column names исправить поля и применить миграцию poetry run alembic upgrade head
   - [ ] 4.7: Сбросить не нужные записи в бд docker compose exec catalog-postgres psql -U catalog -d catalog_db -c "TRUNCATE TABLE products RESTART IDENTITY;"
-  
+
 
 - [ ] 5: кеш
+  - [ ] 5.1: Создание cache.py 
+  - [ ] 5.2: Закрытие клиента в main.py await redis_client.aclose()
+  - [ ] 5.3: Создание get_cache в зависимостях
+  создаем логгер
+  - [ ] 5.4: Устанавливаем динамический ключ для кеша при получении списка cache_key = f"tasks:page:{page}:size:{size}"
+  - [ ] 5.5: Преобразуем в бинарный вид cached = await get_json(cache_key)
+  - [ ] 5.6: Если кеш есть, то логируем и возвращаем данные из кеша
+  - [ ] 5.7: Если нет кеша, логируем и сохраняем список в кеш
+  - [ ] 5.8: в мутирующих запросах перед результатом сбрасываем кеш await delete_pattern("tasks:*")
+  - [ ] 5.9: cache: Redis = Depends(get_cache) - соблюдаем DI-паттерн
+  - [ ] 5.10: Запускаем сервис poetry run uvicorn app.main:app --reload --port 8000
+  - [ ] 5.11: Проверяем кеш curl "http://localhost:8000/tasks?page=1&size=10" в логах CACHE MISS: tasks:page:1:size:10.
+  - [ ] 5.12: Проверяем кеш curl "http://localhost:8000/tasks?page=1&size:10" в логах CACHE HIT: tasks:page:1:size:10.
+  - [ ] 5.13: Проверка redis на прямую docker exec -it todo-service-redis-1 redis-cli KEYS "tasks:*"
+  - [ ] 5.14: Проверка ttl docker exec -it todo-service-redis-1 redis-cli TTL "tasks:page:1:size:10"
+  - [ ] 5.15: Замеры скоростей time curl "http://localhost:8000/tasks?page=1&size=10" # MISS time curl "http://localhost:8000/tasks?page=1&size=10" # HIT
+
 - [ ] 6: seed
 - [ ] 7: Dockerfile
 - [ ] 8: README + проверка

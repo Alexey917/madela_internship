@@ -1,6 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+import logging
 
-from app.dependencies import get_repo
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from redis.asyncio import Redis
+
+from app.dependencies import get_repo, get_cache
+from app.cache import get_json, set_json, delete_pattern
 from app.repository import ProductRepository
 from app.schemas import (
     ProductListResponse,
@@ -10,21 +14,36 @@ from app.schemas import (
 ) 
 
 router = APIRouter(prefix="/products", tags=["products"])
+logger = logging.Logger(__name__)
 
 
 @router.get("", response_model=ProductListResponse)
 async def list_products(
     page: int = Query(1, ge = 1), 
     size: int = Query(20, ge = 1, le = 100), 
-    repo: ProductRepository = Depends(get_repo)
+    repo: ProductRepository = Depends(get_repo),
+    cache: Redis = Depends(get_cache),
 ) -> ProductListResponse:
+    cache_key = f"products:page:{page}:size:{size}"
+
+    cached = await get_json(cache_key)
+
+    if cached is not None:
+        logger.info("CACHE HIT: %s", cache_key)
+        return ProductListResponse.model_validate(cached)
+
+    logger.info("CACHE MISS: %s", cache_key)
     products, total = await repo.list(page, size)
-    return ProductListResponse(
+
+    response = ProductListResponse(
         items=[ProductRead.model_validate(product) for product in products],
         page = page,
         size = size,
         total = total
     )
+
+    await set_json(cache_key, response.model_dump(mode="json"), ttl=60)
+    return response
 
 
 @router.get("/{id}", response_model=ProductRead)
@@ -43,7 +62,8 @@ async def get_product(
 @router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
 async def create_product(
     data: ProductCreate,
-    repo: ProductRepository = Depends(get_repo)
+    repo: ProductRepository = Depends(get_repo),
+    cache: Redis = Depends(get_cache),
 ) -> ProductRead:
     product = await repo.create(
         name = data.name,
@@ -56,6 +76,7 @@ async def create_product(
         stock = data.stock,
         play_time_minutes = data.play_time_minutes,
     )
+    await delete_pattern("products:*")
     return ProductRead.model_validate(product)
 
 
@@ -63,7 +84,8 @@ async def create_product(
 async def update_product(
     id: int, 
     data: ProductUpdate,
-    repo: ProductRepository = Depends(get_repo)
+    repo: ProductRepository = Depends(get_repo),
+    cache: Redis = Depends(get_cache),
 ) -> ProductRead:
     product = await repo.update(
         id,
@@ -82,4 +104,5 @@ async def update_product(
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    await delete_pattern("products:*")
     return ProductRead.model_validate(product)
