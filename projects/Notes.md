@@ -42,6 +42,17 @@
 
 
 - [ ] 4: схемы + роутеры
+  - [ ] 4.1: Создание schemas.py и описание схем для списка продуктов, создания, обновления и получения получения по id
+  - [ ] 4.2: Создание dependencies.py 
+  - [ ] 4.3: Создание routes/products.py и написание роутов
+  - [ ] 4.3: Подключение роутов в main.py app.include_router(products.router)
+  - [ ] 4.4: Поднять докер, запустить poetry run uvicorn app.main:app --reload --port 8001
+  - [ ] 4.5: Тестирование работоспособности
+  - [ ] 4.6: Если есть ошибка в бд, то изменить поля через миграцию poetry run alembic revision -m "fix timestamp column names"
+  - [ ] 4.6: В файле fix timestamp column names исправить поля и применить миграцию poetry run alembic upgrade head
+  - [ ] 4.7: Сбросить не нужные записи в бд docker compose exec catalog-postgres psql -U catalog -d catalog_db -c "TRUNCATE TABLE products RESTART IDENTITY;"
+  
+
 - [ ] 5: кеш
 - [ ] 6: seed
 - [ ] 7: Dockerfile

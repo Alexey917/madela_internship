@@ -69,8 +69,9 @@ class ProductRepository:
         )
 
         self.session.add(product)
+        await self.session.flush()    
+        await self.session.refresh(product) 
         await self.session.commit()
-        await self.session.refresh(product)
         return product
 
 
@@ -124,7 +125,8 @@ class ProductRepository:
             product.min_age = min_age
 
         self.session.add(product)
+        await self.session.flush()   
+        await self.session.refresh(product)  
         await self.session.commit()
-        await self.session.refresh(product)
         return product
         

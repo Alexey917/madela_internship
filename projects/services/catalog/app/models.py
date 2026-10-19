@@ -21,10 +21,10 @@ class Product(Base):
     stock: Mapped[int] = mapped_column(Integer, default = 0, nullable = False)
     is_active: Mapped[bool] = mapped_column(Boolean, default = True, nullable = False)
 
-    create_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    update_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
