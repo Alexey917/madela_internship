@@ -72,5 +72,11 @@
   - [ ] 5.15: Замеры скоростей time curl "http://localhost:8000/tasks?page=1&size=10" # MISS time curl "http://localhost:8000/tasks?page=1&size=10" # HIT
 
 - [ ] 6: seed
+  - [ ] 6.1: Создание seed.py в scripts
+  - [ ] 6.2: Поднятие докера: docker compose up -d
+  - [ ] 6.3: Запуск скрипта: poetry run python -m scripts.seed
+  - [ ] 6.4: Проверка бд: docker exec -it shop-catalog-postgres-1 psql -U catalog -d catalog_db \
+  -c "SELECT id, name, price, stock FROM products ORDER BY id;"
+
 - [ ] 7: Dockerfile
 - [ ] 8: README + проверка
