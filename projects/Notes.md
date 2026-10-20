@@ -79,4 +79,13 @@
   -c "SELECT id, name, price, stock FROM products ORDER BY id;"
 
 - [ ] 7: Dockerfile
+  - [ ] 7.1: Создание .dockerignore
+  - [ ] 7.2: Создание Dockerfile
+  - [ ] 7.3: Создание entrypoint.sh
+  - [ ] 7.4: Добавление сервиса каталог в docker-compose.yml
+  - [ ] 7.5: Остановка старого образа docker compose down
+  - [ ] 7.6: Собрать образ каталога docker compose build catalog
+  - [ ] 7.7: Поднять все docker compose up -d, docker compose ps
+  - [ ] 7.8: Проверка логов docker compose logs catalog
+
 - [ ] 8: README + проверка
