@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str
+    rabbitmq_url: str
     redis_url: str
     service_name: str = "catalog-service"
     log_level: str = "INFO"

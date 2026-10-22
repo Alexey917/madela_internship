@@ -117,6 +117,28 @@ SEED_PRODUCTS = [
     "stock": 8,
     "description": "Абстрактная игра о выкладывании плиток.",
   },
+  {
+    "name": "Смертельные материалы",
+    "description": "Помогите незнакомцам пройти ряд комнат с опасными испытаниями, избежать гибели и вспомнить, как все они между собой связаны. Это карточный квест-детектив с логическими и дедуктивными загадками, атмосферой хоррора и необычной механикой.",
+    "publisher": "HOBBY WORLD",
+    "min_players": 1,
+    "max_players": 6,
+    "play_time_minutes": 30,
+    "min_age": 18,
+    "stock": 14,
+    "price": 500
+  },
+  {
+    "name": "Морской бой",
+    "description": "Перед Вами увлекательная настольная игра – «Морской бой». В нее можно играть снова и снова! Ведь в наборе есть все необходимое для победы над соперником. Играйте дома и в дороге, ведь магнитные фишки крепко держатся на металлическом поле. А еще их так удобно хранить в жестяной коробочке!",
+    "publisher": "Десятое королевство",
+    "min_players": 2,
+    "max_players": 15,
+    "play_time_minutes": 15,
+    "min_age": 5,
+    "stock": 7,
+    "price": 500
+  }
 ]
 
 
@@ -126,7 +148,7 @@ async def seed() -> None:
         skipped = 0
 
         for product in SEED_PRODUCTS:
-            existing = await session.execute(select(Product).where(Product.name == product["name"]))
+            existing = await session.execute(select(Product.id).where(Product.name == product["name"]).limit(1))
 
             if existing.scalar_one_or_none() is not None:
                 skipped += 1

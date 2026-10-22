@@ -88,7 +88,25 @@
   - [x] 7.7: Поднять все docker compose up -d, docker compose ps
   - [x] 7.8: Проверка логов docker compose logs catalog
 
-- [ ] 8: README + проверка
+- [x] 8: README + проверка
+- [ ] 9: RabbitMQ + Outbox
+  - [ ] 9.1: Добавление сервиса RabbitMQ для каталог в docker-compose и не забыть указать что, каталог зависит от этого сервиса
+  - [ ] 9.2: Добавление зависимости для работы с rabbitmq: poetry add aio-pika
+  - [ ] 9.3: Добавление пути для rabbitmq: RABBITMQ_URL=amqp://catalog:catalog@localhost:5673/
+  - [ ] 9.4: Добавление в config.py url для rabbitmq
+  - [ ] 9.5: Создание borker.py, класс брокер с инициализацией соединения, канала и обменника, а также метода для открытия соединения, закрытия соединения и отправки сообщения в очередь по routing_key
+  - [ ] 9.6: Открытие и закрытие соединения в lifespan 
+  - [ ] 9.7: Создание таблицы для OutboxMessage
+  - [ ] 9.8: Создание миграций: poetry run alembic revision --autogenerate -m "create outbox_messages table", poetry run alembic 
+  upgrade head
+  - [ ] 9.9: Проверка созданной таблицы docker exec -it shop-catalog-postgres-1 psql -U catalog -d catalog_db -c "\d outbox_messages"
+  - [ ] 9.10: Создание outbox.py в нем через enqueue_event создаем сообщение о событии и добавляем в бд
+  - [ ] 9.11: Обновление repository.py беред коммитом нужно выполнить функцию enqueue_event при создании и обновлении товара
+  - [ ] 9.12: В outbox.py добавляем outbox_worker, который будет бесконечно брать неопубликованные сообщения и опубликовывать их
+  - [ ] 9.13: В lifespan создать таску, для публикации сообщений в фоне
+  - [ ] 9.14: Для проверки сделать действие, которое создает событие(создать товар), после чего в таблице OutboxMessage появиться дата публикации docker exec -it projects-catalog-postgres-1 psql -U catalog -d catalog_db \
+  -c "SELECT id, event_type, published_at FROM outbox_messages ORDER BY id DESC LIMIT 5;"
+
 
 ## Следующее
 

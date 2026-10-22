@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from decimal import Decimal
 
 from app.models import Product
+from app.outbox import enqueue_event
 
 
 class ProductRepository:
@@ -70,8 +71,20 @@ class ProductRepository:
 
         self.session.add(product)
         await self.session.flush()    
-        await self.session.refresh(product) 
+
+        await enqueue_event(
+            self.session,
+            event_type = "product.created",
+            payload = {
+                "id": product.id,
+                "name": product.name,
+                "price": str(product.price),
+                "stock": product.stock
+            }
+        )
+        print(f"COMMITTING: session={id(self.session)}", flush=True)
         await self.session.commit()
+        print("COMMIT_DONE", flush=True)
         return product
 
 
@@ -126,7 +139,18 @@ class ProductRepository:
 
         self.session.add(product)
         await self.session.flush()   
-        await self.session.refresh(product)  
+
+        await enqueue_event(
+            self.session,
+            event_type = "product.created",
+            payload = {
+                "id": product.id,
+                "name": product.name,
+                "price": str(product.price),
+                "stock": product.stock
+            }
+        )
+
         await self.session.commit()
         return product
         
