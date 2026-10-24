@@ -1,0 +1,63 @@
+services:
+  inventory-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - inventory_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  
+  inventory-redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  catalog-rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: catalog
+      RABBITMQ_DEFAULT_PASS: catalog
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  inventory:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://inventory:inventory@inventory-postgres:5432/inventory_db
+      RABBITMQ_URL: amqp://catalog:catalog@catalog-rabbitmq:5672/
+      REDIS_URL: redis://inventory-redis:6379/0
+      SERVICE_NAME: inventory-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8002:8000"
+    depends_on:
+      inventory-postgres:
+        condition: service_healthy
+      inventory-redis:
+        condition: service_healthy
+      catalog-rabbitmq:
+        condition: service_healthy
+
+volumes:
+  inventory_pg_data:
