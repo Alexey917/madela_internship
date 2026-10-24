@@ -10,3 +10,9 @@
   - [x] 11.3: Добавление запуска seed в entrypoint.sh: python -m scripts.seed
   - [x] 11.4: Проверка бд: docker exec -it projects-inventory-postgres-1 psql -U inventory -d inventory_db \
   -c "SELECT product_id, available, reserved FROM stock ORDER BY product_id;"
+
+- [x] 12: **repository**
+  - [x] 12.1: Тоже самое что и в пункте 3 Catalog
+  - [x] 12.2: Сброс данных после теста: docker exec -it projects-inventory-postgres-1 psql -U inventory -d inventory_db \
+  -c "UPDATE stock SET available=3, reserved=0 WHERE product_id=9;"
+
