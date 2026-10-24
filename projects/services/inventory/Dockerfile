@@ -26,7 +26,7 @@ RUN groupadd --gid 1000 app && useradd --uid 1000 --gid app --create-home app
 COPY --chown=app:app app ./app
 COPY --chown=app:app alembic ./alembic
 COPY --chown=app:app alembic.ini ./alembic.ini
-# COPY --chown=app:app scripts ./scripts
+COPY --chown=app:app scripts ./scripts
 COPY --chown=app:app entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
