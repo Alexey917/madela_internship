@@ -45,8 +45,8 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://inventory:inventory@inventory-postgres:5432/inventory_db
-      RABBITMQ_URL: amqp://catalog:catalog@catalog-rabbitmq:5672/
-      REDIS_URL: redis://inventory-redis:6379/0
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/0
       SERVICE_NAME: inventory-service
       LOG_LEVEL: INFO
     ports:

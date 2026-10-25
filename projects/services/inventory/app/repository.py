@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import Stock
+from app.outbox import enqueue_event
 
 class StockRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -24,15 +26,34 @@ class StockRepository:
         stock = await self.get_for_update(product_id)
 
         if stock is None:
+            await enqueue_event(
+                self.session,
+                event_type="inventory.failed",
+                payload={"product_id": product_id, "quantity": quantity, "reason": "not_found"},
+            )
+            await self.session.commit()
             return None
 
         if stock.available < quantity:
+            await enqueue_event(
+                self.session,
+                event_type="inventory.failed",
+                payload={"product_id": product_id, "quantity": quantity, "reason": "insufficient"},
+            )
+            await self.session.commit()
             return None
 
         stock.available -= quantity
         stock.reserved += quantity
 
         await self.session.flush() 
+
+        await enqueue_event(
+            self.session,
+            event_type="inventory.reserved",
+            payload={"product_id": product_id, "quantity": quantity},
+        )
+
         await self.session.commit()
         await self.session.refresh(stock)
         return stock
@@ -70,6 +91,13 @@ class StockRepository:
         stock.available += quantity
 
         await self.session.flush() 
+
+        await enqueue_event(
+            self.session,
+            event_type="inventory.released",
+            payload={"product_id": product_id, "quantity": quantity},
+        )
+
         await self.session.commit()
         await self.session.refresh(stock)
         return stock
