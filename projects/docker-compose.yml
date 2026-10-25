@@ -15,17 +15,17 @@ services:
       timeout: 3s
       retries: 5
   
-  inventory-redis:
+  redis:
     image: redis:7-alpine
     ports:
-      - "6381:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-  catalog-rabbitmq:
+  rabbitmq:
     image: rabbitmq:3.13-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: catalog
@@ -54,9 +54,9 @@ services:
     depends_on:
       inventory-postgres:
         condition: service_healthy
-      inventory-redis:
+      redis:
         condition: service_healthy
-      catalog-rabbitmq:
+      rabbitmq:
         condition: service_healthy
 
 volumes:
