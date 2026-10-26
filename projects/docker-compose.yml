@@ -15,7 +15,7 @@ services:
       timeout: 3s
       retries: 5
   
-  catalog-redis:
+  redis:
     image: redis:7-alpine
     ports:
       - "6380:6379"
@@ -25,7 +25,7 @@ services:
       timeout: 3s
       retries: 5
 
-  catalog-rabbitmq:
+  rabbitmq:
     image: rabbitmq:3.13-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: catalog
@@ -45,8 +45,8 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://catalog:catalog@catalog-postgres:5432/catalog_db
-      RABBITMQ_URL: amqp://catalog:catalog@catalog-rabbitmq:5672/
-      REDIS_URL: redis://catalog-redis:6379/0
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/0
       SERVICE_NAME: catalog-service
       LOG_LEVEL: INFO
     ports:
@@ -54,9 +54,9 @@ services:
     depends_on:
       catalog-postgres:
         condition: service_healthy
-      catalog-redis:
+      redis:
         condition: service_healthy
-      catalog-rabbitmq:
+      rabbitmq:
         condition: service_healthy
 
 volumes:
