@@ -35,5 +35,37 @@
   - [x] 14.9: Проверка TTL docker exec -it projects-inventory-redis-1 redis-cli TTL "idem:test-key-1"
   - [x] 14.10: Сброс данных docker exec -it shop-inventory-postgres-1 psql -U inventory -d inventory_db \
   -c "UPDATE stock SET available=3, reserved=0 WHERE product_id=9;" docker exec -it shop-inventory-redis-1 redis-cli DEL idem:test-key-1 idem:test-key-2 idem:test-key-3
- 
+
+- [x] 15: **RabbitMQ + Outbox**
+  - [x] 15.1: Тоже самое что и в пункте 9 Catalog
+  - [x] 15.2: Проверка: успешный reserve - проверка outbox, reserve failed (нехватка) - проверка outbox, release - проверка outbox
+  - [x] 15.3: Проверка outbox docker exec -it projects-inventory-postgres-1 psql -U inventory -d inventory_db \
+  -c "SELECT id, event_type, payload, published_at FROM outbox_messages ORDER BY id DESC LIMIT 3;"
+  - [x] 15.4: Сброс: docker exec -it projects-inventory-postgres-1 psql -U inventory -d inventory_db \
+  -c "UPDATE stock SET available=3, reserved=0 WHERE product_id=9;" docker exec -it projects-redis-1 redis-cli FLUSHDB
+
+- [x] 16: **Consumer для order.created**
+  - [x] 16.1: Создание consumer.py
+  - [x] 16.2: start_consumer будет запускать consumer 
+    - [x] 16.2.1: Сначала проверка на существование канала 
+    - [x] 16.2.2: Cоздание собственного обменника для order.created
+    - [x] 16.2.3: Cозадание очереди 
+    - [x] 16.2.4: Привязка к очереди по обменнику и routing_key 
+    - [x] 16.2.5: Перебор элементов из очереди с автоматическим подтверждением message.process()
+  - [x] 16.3: обработчик _handle_order_created будет осуществлять бизнес логику
+    - [x] 16.3.1: Из тела сообщения достаем id заказа и массив товаров, если чего-то из этого нет, выходим из функции
+    - [x] 16.3.2: Если есть id и массив, создаем сессию - перебираем массив и резервируем каждый товар, если товара не существует, то возвращаем все что было зарезервировано в исходное состояние(делаем release)
+    - [x] 16.3.3: Сохраняем в бд событие и данные(добавляем id заказа) как при ошибке так и при успехе
+    - [x] 16.3.4: При существовании stock добавляем его в массив зарезервированных товаров
+  - [x] 16.4: функция _publish фиксирует событие и данные в outbox
+  - [x] 16.5: В lifespan создается такса с consumer, ожидается, отменяется
+  - [x] 16.6: Проверка 
+    - [x] 16.6.1: При старте контейнера должен быть виден лог о старте consumer
+    - [x] 16.6.2: В http://localhost:15672 → Exchanges → order.events сделать публикацию сообщения с ключом order.created и "успешными данными", проверить логи сервиса, проверить запись в outbox таблице
+    - [x] 16.6.3: Аналогично проверить "провальный резерв" 
+    - [x] 16.6.4: Аналогично проверить "частично провальный резерв"
+    - [x] 16.6.5: Сбросить данные
+
+
+
 

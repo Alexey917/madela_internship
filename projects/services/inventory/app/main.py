@@ -11,21 +11,25 @@ from app.routers import stock
 from app.cache import redis_client
 from app.broker import broker
 from app.outbox import outbox_worker
+from app.consumer import start_consumer
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await broker.connection()
     worker_task = asyncio.create_task(outbox_worker())
+    consumer_task = asyncio.create_task(start_consumer())
 
     yield
 
+    consumer_task.cancel()
     worker_task .cancel()
 
-    try:
-        await worker_task
-    except asyncio.CancelledError:
-        pass
+    for task in (consumer_task, worker_task):
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
     await broker.close()
     await engine.dispose()
