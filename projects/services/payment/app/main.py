@@ -6,6 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.cache import redis_client
 from app.config import settings
 from app.db import engine
+from app.mock_gateway import router as mock_gateway_router
 
 
 @asynccontextmanager
@@ -18,6 +19,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=settings.service_name, lifespan=lifespan)
 
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
+app.include_router(mock_gateway_router)
 
 
 @app.get("/health")
