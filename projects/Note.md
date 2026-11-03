@@ -46,6 +46,25 @@
     - [x] 21.3.4: Проверка outbox 
     - [x] 21.3.5: Сброс теста docker exec -it shop-payment-postgres-1 psql -U payment -d payments_db -c " TRUNCATE payments RESTART IDENTITY; TRUNCATE outbox_messages RESTART IDENTITY;" docker compose exec redis redis-cli -n 2 FLUSHDB
 
+- [x] 22: Consumer для order.created
+  - [x] 22.1: Создание consumer.py
+  - [x] 22.2: start_consumer будет запускать consumer
+    - [x] 22.2.1: Сначала проверка на существование канала
+    - [x] 22.2.2: Cоздание собственного обменника для order.created
+    - [x] 22.2.3: Cозадание очереди
+    - [x] 22.2.4: Привязка к очереди по обменнику и routing_key
+    - [x] 22.2.5: Перебор элементов из очереди с автоматическим подтверждением message.process()
+  - [x] 22.3: обработчик _handle_order_created будет осуществлять бизнес логику
+    - [x] 22.3.1: Из тела сообщения достаем id заказа и сумму, если чего-то из этого нет, выходим из функции
+    - [x] 22.3.2: Если есть id и сумма, создаем сессию - и вызываем await repo.create_and_charge(order_id, amount)
+  - [x] 22.4: В lifespan создается такса с consumer, ожидается, отменяется
+  - [x] 22.5: Проверка
+
+    - [x] 22.5.1: Пересборка + логи docker compose up -d --build payment docker compose logs -f payment
+    - [x] 22.5.2: В http://localhost:15672 → Exchanges → order.events сделать публикацию сообщения с ключом order.created и "успешными данными", проверить логи сервиса, проверить запись в outbox таблице и бд
+    - [x] 22.5.3: Проверить идемпотентность опубликовать тот же order_id
+    - [x] 22.5.4: Сброс данных docker exec -it shop-payment-postgres-1 psql -U payment -d payments_db -c " TRUNCATE payments RESTART IDENTITY; TRUNCATE outbox_messages RESTART IDENTITY;" docker compose exec redis redis-cli -n 2 FLUSHDB
+
 
 
 

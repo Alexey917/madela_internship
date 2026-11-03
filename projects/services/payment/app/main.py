@@ -11,20 +11,24 @@ from app.db import engine
 from app.mock_gateway import router as mock_gateway_router
 from app.outbox import outbox_worker
 from app.routers import payment
+from app.consumer import start_consumer
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await broker.connect()
     worker_task = asyncio.create_task(outbox_worker())
+    consumer_task = asyncio.create_task(start_consumer())
 
     yield
 
+    consumer_task.cancel()
     worker_task.cancel()
-    try:
-        await worker_task
-    except asyncio.CancelledError:
-        pass
+    for task in (consumer_task, worker_task):
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
     await broker.close()
