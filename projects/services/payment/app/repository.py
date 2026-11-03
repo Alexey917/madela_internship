@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from app.gateway_client import GatewayResponse, charge_with_retry
 from app.models import Payment, PaymentStatus
+from app.outbox import enqueue_event
 
 class PaymentRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -43,6 +44,16 @@ class PaymentRepository:
         except Exception as exc:
             payment.status = PaymentStatus.FAILED
             payment.failure_reason = f"gateway_error: {type(exc).__name__}"
+            await enqueue_event(
+                self.session,
+                event_type="payment.failed",
+                payload={
+                    "payment_id": payment.id,
+                    "order_id": payment.order_id,
+                    "amount": str(payment.amount),
+                    "reason": payment.failure_reason,
+                },
+            )
             await self.session.commit()
             await self.session.refresh(payment)
             return payment
@@ -50,9 +61,29 @@ class PaymentRepository:
         payment.external_id = gateway_response.external_id
         if gateway_response.status == 'succeeded':
             payment.status = PaymentStatus.SUCCEEDED
+            await enqueue_event(
+                self.session,
+                event_type="payment.succeeded",
+                payload={
+                    "payment_id": payment.id,
+                    "order_id": payment.order_id,
+                    "amount": str(payment.amount),
+                    "external_id": payment.external_id,
+                },
+            )
         else:
             payment.status = PaymentStatus.FAILED
             payment.failure_reason = gateway_response.failure_reason
+            await enqueue_event(
+                self.session,
+                event_type="payment.failed",
+                payload={
+                    "payment_id": payment.id,
+                    "order_id": payment.order_id,
+                    "amount": str(payment.amount),
+                    "reason": payment.failure_reason,
+                },
+            )
 
         await self.session.commit()
         await self.session.refresh(payment)
@@ -70,6 +101,16 @@ class PaymentRepository:
         payment.status = PaymentStatus.REFUNDED
         if reason:
             payment.failure_reason = f"refund: {reason}"
+
+        await enqueue_event(
+            self.session,
+            event_type="payment.refunded",
+            payload={
+                "payment_id": payment.id,
+                "order_id": payment.order_id,
+                "amount": str(payment.amount),
+            },
+        )
 
         await self.session.commit()
         await self.session.refresh(payment)

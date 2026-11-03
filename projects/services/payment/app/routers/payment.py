@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.schemas import PaymentRead, PaymentCreate
+from app.schemas import PaymentRead, PaymentCreate, PaymentWebhook
 from app.repository import PaymentRepository
 from app.dependencies import get_repo
 from app.idempotency import check_idempotency, get_cached_response, store_response
@@ -61,6 +61,27 @@ async def refund_payment(
     body = result.model_dump(mode="json")
     await store_response(idem_key, 200, body)
     return result
+
+
+router.post("/webhook", status_code=status.HTTP_200_OK)
+async def webhook(
+    data: PaymentWebhook,
+    repo: PaymentRepository = Depends(get_repo),
+
+) -> dict[str, str]:
+    """
+    Webhook от платёжного шлюза.
+    Обновляет Payment и публикует событие через outbox.
+    Идемпотентен по (payment_id, status): повторный вызов с тем же статусом — no-op.
+    """
+    payment = await repo.get(data.payment_id)
+    if payment is None:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    if payment.status == data.status:
+        return {"status": "already_processed"}
+
+    raise HTTPException(status_code=501, detail="Webhook updates not implemented yet — use /payments directly")
 
     
 

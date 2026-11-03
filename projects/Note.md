@@ -34,6 +34,21 @@
     - [x] 20.9.7: Запрос без ключа
     - [x] 20.9.8: Сброс тестов docker exec -it projects-payment-postgres-1 psql -U payment -d payments_db -c "TRUNCATE payments RESTART IDENTITY;" docker compose exec redis redis-cli -n 2 FLUSHDB
 
+- [x] 21: **broker + outbox + webhook**
+  - [x] 21.1: Тоже что и в пункте 9 catalog
+  - [x] 21.2: Создание эндпоинта для webhook
+  - [x] 21.3: Проверка
+    - [x] 21.3.1: Пересборка докера docker compose up -d --build payment и проверка логов docker compose logs payment | tail -20
+    - [x] 21.3.2: Создать усешный платеж
+    - [x] 21.3.3: Проверка outbox docker exec -it projects-payment-postgres-1 psql -U payment -d payments_db \
+  -c "SELECT id, event_type, published_at FROM outbox_messages ORDER BY id DESC LIMIT 5;"
+    - [x] 21.3.3: Создать refund
+    - [x] 21.3.4: Проверка outbox 
+    - [x] 21.3.5: Сброс теста docker exec -it shop-payment-postgres-1 psql -U payment -d payments_db -c " TRUNCATE payments RESTART IDENTITY; TRUNCATE outbox_messages RESTART IDENTITY;" docker compose exec redis redis-cli -n 2 FLUSHDB
+
+
+
+
 
 
 

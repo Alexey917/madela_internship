@@ -25,3 +25,10 @@ class PaymentCreate(BaseModel):
 
 class PaymentRefund(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
+
+
+class PaymentWebhook(BaseModel):
+    payment_id: int
+    status: str
+    external_id: str | None = None
+    failure_reason: str | None = None

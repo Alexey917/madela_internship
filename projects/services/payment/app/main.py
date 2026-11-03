@@ -1,18 +1,33 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from app.broker import broker
 from app.cache import redis_client
 from app.config import settings
 from app.db import engine
 from app.mock_gateway import router as mock_gateway_router
+from app.outbox import outbox_worker
 from app.routers import payment
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await broker.connect()
+    worker_task = asyncio.create_task(outbox_worker())
+
     yield
+
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+
+
+    await broker.close()
     await engine.dispose()
     await redis_client.aclose()
 
