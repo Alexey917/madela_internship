@@ -7,6 +7,7 @@ from app.cache import redis_client
 from app.config import settings
 from app.db import engine
 from app.mock_gateway import router as mock_gateway_router
+from app.routers import payment
 
 
 @asynccontextmanager
@@ -21,6 +22,7 @@ app = FastAPI(title=settings.service_name, lifespan=lifespan)
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 app.include_router(mock_gateway_router)
+app.include_router(payment.router)
 
 
 @app.get("/health")
