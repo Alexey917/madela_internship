@@ -10,13 +10,13 @@ from app.repository import StockRepository
 
 EXCHANGE_NAME = "order.events"
 QUEUE_NAME = "inventory.order-events"
-ROUTING_KEY = "order.created"
+ROUTING_KEY = "inventory.reserve"
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def start_consumer() -> None:
-    """Слушает order.created, резервирует товары."""
+    """Слушает inventory.reserve, резервирует товары."""
     if broker._channel is None:
         raise RuntimeError("Broker is not connected")
 
@@ -36,20 +36,20 @@ async def start_consumer() -> None:
             async with message.process():
                 try:
                     payload = json.loads(message.body)
-                    await _handle_order_created(payload)
+                    await _handle_inventory_reserve(payload)
                 except Exception:
-                    logger.exception("Failed to process order.created")
+                    logger.exception("Failed to process inventory.reserve")
 
 
-async def _handle_order_created(payload: dict) -> None:
+async def _handle_inventory_reserve(payload: dict) -> None:
     order_id = payload.get("order_id")
     items = payload.get("items", [])
 
     if not order_id or not items:
-        logger.warning("Invalid order.created payload: %s", payload)
+        logger.warning("Invalid inventory.reserve payload: %s", payload)
         return
 
-    logger.info("Processing order.created: order_id=%s, items=%d", order_id, len(items))
+    logger.info("Processing inventory.reserve: order_id=%s, items=%d", order_id, len(items))
 
     reserved: list[dict] = []
 
