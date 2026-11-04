@@ -16,7 +16,7 @@ from app.consumer import start_consumer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await broker.connect()
+    await broker.connection()
     worker_task = asyncio.create_task(outbox_worker())
     consumer_task = asyncio.create_task(start_consumer())
 

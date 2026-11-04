@@ -47,7 +47,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://payment:payment@payment-postgres:5432/payments_db
       REDIS_URL: redis://redis:6379/2
       RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
-      MOCK_GATEWAY_URL: http://localhost:8003/mock-gateway
+      MOCK_GATEWAY_URL: http://localhost:8000/mock-gateway
       SERVICE_NAME: payment-service
       LOG_LEVEL: INFO  
     ports:

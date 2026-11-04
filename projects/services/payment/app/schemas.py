@@ -9,7 +9,7 @@ class PaymentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    order_id: int
+    order_id: str
     amount: Decimal
     payment_status: PaymentStatus
     external_id: str | None

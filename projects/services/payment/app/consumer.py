@@ -56,5 +56,5 @@ async def _handle_payment_process(payload: dict) -> None:
 
     logger.info(
         "Payment processed: order_id=%s, payment_id=%s, status=%s",
-        order_id, payment.id, payment.status,
+        order_id, payment.id, payment.payment_status,
     )
