@@ -186,3 +186,71 @@ class ServiceSaga:
         await self.repo.update_saga_status(order_id, SagaStatus.CANCELLED)
         await self.session.commit()
         logger.info("SAGA: order_id=%s → CANCELLED (released)", order_id)
+
+
+    async def cancel(self, order_id: int) -> None:
+        """Ручная отмена заказа. Только для PENDING / RESERVED."""
+        order = await self.repo.get(order_id)
+        if order is None:
+            raise ValueError("Order not found")
+
+        if order.status in (OrderStatus.COMPLETED, OrderStatus.CANCELLED):
+            raise ValueError(f"Cannot cancel order in status {order.status}")
+
+        if order.status == OrderStatus.PAID:
+            await enqueue_event(
+                self.session,
+                event_type="payment.refund",
+                payload={"order_id": order_id},
+            )
+            await self.repo.update_saga_status(order_id, SagaStatus.COMPENSATING, last_error="cancelled_by_user")
+            await self.repo.update_status(order_id, OrderStatus.FAILED)
+            await self.session.commit()
+            logger.info("SAGA: order_id=%s → COMPENSATING (cancel PAID), published payment.refund", order_id)
+            return
+
+        # Если PENDING — Inventory мог ещё не ответить. Публикуем release —
+        # если резерва нет, Inventory вернёт 409 (игнорируем).
+        await self.repo.update_saga_status(
+            order_id, SagaStatus.COMPENSATING, last_error="cancelled_by_user"
+        )
+        await self.repo.update_status(order_id, OrderStatus.FAILED)
+
+        await enqueue_event(
+            self.session,
+            event_type="inventory.release",
+            payload={
+                "order_id": order_id,
+                "items": [
+                    {"product_id": i.product_id, "quantity": i.quantity}
+                    for i in order.items
+                ],
+            },
+        )
+        await self.session.commit()
+        logger.info("SAGA: order_id=%s → COMPENSATING (user cancel)", order_id)
+
+
+    async def on_payment_refunded(self, order_id: int) -> None:
+        """Получен payment.refunded → публикуем inventory.release (если ещё не) → CANCELLED."""
+        order = await self.repo.get(order_id)
+        if order is None:
+            return
+        if order.status == OrderStatus.CANCELLED:
+            return
+
+        # Если inventory.release ещё не публиковался (отмена PAID-заказа) — публикуем
+        # (если уже публиковался — Inventory обработает повторно, no-op)
+        await enqueue_event(
+            self.session,
+            event_type="inventory.release",
+            payload={
+                "order_id": order_id,
+                "items": [
+                    {"product_id": i.product_id, "quantity": i.quantity}
+                    for i in order.items
+                ],
+            },
+        )
+        await self.session.commit()
+        logger.info("SAGA: order_id=%s → refunded, published inventory.release", order_id)

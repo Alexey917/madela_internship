@@ -32,6 +32,23 @@
     - [x] 27.3.6: Если получаем inventory.released, меняем статус на cancelled
   - [x] 27.4: Без роутов можно протестировать через скрипт poetry run python -m scripts.test_saga
   - [x] 27.5: После теста сбросить данные docker exec -it shop-order-postgres-1 psql -U order -d orders_db -c "TRUNCATE orders, order_items, saga_state, outbox_messages RESTART IDENTITY CASCADE;"docker exec -it shop-inventory-postgres-1 psql -U inventory -d inventory_db -c "UPDATE stock SET available=3, reserved=0 WHERE product_id=9;TRUNCATE outbox_messages RESTART IDENTITY;"
-  
+
+
+- [x] 28: **consumer + роуты**
+  - [x] 28.1: Старт консьюмера для инвентори
+    - [x] 28.1.1: Если канал отсутствует выбрасываем ошибку raise RuntimeError("Broker is not connected")
+    - [x] 28.1.2: Создание обменника для inventory.events
+    - [x] 28.1.3: Создание очереди
+    - [x] 28.1.4: Привязка очереди к событиям inventory.reserved, inventory.failed, inventory.released
+    - [x] 28.1.5: Перебираем сообщения из очереди и вызываем соответствующий обработчик
+  - [x] 28.2: Аналогично для консьюмера payment
+  - [x] 28.3: Обработчики достают из сообщения order_id, если он есть, то по routing_key вызывают соответствующий метод саги, иначе ничего не делаем и логируем
+  - [x] 28.4: Создание схем
+  - [x] 28.5: Создание роутов
+  - [x] 28.6: Создание тасков для consumer в main.py
+  - [x] 28.7: Протестировать удачный и не удачный сценарии покупки
+
+
+
   
 
