@@ -1,0 +1,21 @@
+services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - catalog
+      - inventory
+      - payment
+      - order
+      - ui
+  ui:
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"    # прямой доступ (для отладки)
+    depends_on:
+      - gateway
