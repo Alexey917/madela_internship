@@ -16,7 +16,7 @@ class PaymentRepository:
 
 
     async def get_by_order_id(self, order_id: str) -> Payment | None:
-        payment = await self.session.execute(select(Payment).where(Payment.id == order_id))
+        payment = await self.session.execute(select(Payment).where(Payment.order_id == order_id))
         return payment.scalar_one_or_none()
 
 
@@ -25,7 +25,7 @@ class PaymentRepository:
         Создаёт Payment, вызывает шлюз, обновляет статус.
         Идемпотентно: если платёж по order_id уже есть — возвращает его.
         """
-        existing = await self.session.get_by_order_id(order_id)
+        existing = await self.get_by_order_id(order_id)
 
         if existing is not None:
             return existing
@@ -42,7 +42,7 @@ class PaymentRepository:
         try:
             gateway_response: GatewayResponse = await charge_with_retry(order_id, amount)
         except Exception as exc:
-            payment.status = PaymentStatus.FAILED
+            payment.payment_status = PaymentStatus.FAILED
             payment.failure_reason = f"gateway_error: {type(exc).__name__}"
             await enqueue_event(
                 self.session,
@@ -60,7 +60,7 @@ class PaymentRepository:
 
         payment.external_id = gateway_response.external_id
         if gateway_response.status == 'succeeded':
-            payment.status = PaymentStatus.SUCCEEDED
+            payment.payment_status = PaymentStatus.SUCCEEDED
             await enqueue_event(
                 self.session,
                 event_type="payment.succeeded",
@@ -72,7 +72,7 @@ class PaymentRepository:
                 },
             )
         else:
-            payment.status = PaymentStatus.FAILED
+            payment.payment_status = PaymentStatus.FAILED
             payment.failure_reason = gateway_response.failure_reason
             await enqueue_event(
                 self.session,
@@ -90,15 +90,15 @@ class PaymentRepository:
         return payment
 
 
-    async def refund(self, payment_id: int, reason: str | None) -> Payment | None:
+    async def refund(self, payment_id: int, reason: str | None = None) -> Payment | None:
         """Возврат. Только для succeeded."""
         payment = await self.get(payment_id)
         if payment is None:
             return None
-        if payment.status != PaymentStatus.SUCCEEDED:
+        if payment.payment_status != PaymentStatus.SUCCEEDED:
             return None
 
-        payment.status = PaymentStatus.REFUNDED
+        payment.payment_status = PaymentStatus.REFUNDED
         if reason:
             payment.failure_reason = f"refund: {reason}"
 

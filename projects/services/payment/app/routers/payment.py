@@ -8,19 +8,19 @@ from app.idempotency import check_idempotency, get_cached_response, store_respon
 
 router = APIRouter(prefix="/payments", tags=["payment"])
 
-router.get("/{id}", response_model=PaymentRead)
+@router.get("/{payment_id}", response_model=PaymentRead)
 async def get_payment(
     payment_id: int, 
     repo: PaymentRepository = Depends(get_repo)
 ) -> PaymentRead | None:
     result = await repo.get(payment_id)
 
-    if result in None:
-        return HTTPException(status_code=404, detail="Payment not found")
+    if result is None:
+        raise HTTPException(status_code=404, detail="Payment not found")
     return PaymentRead.model_validate(result)
     
     
-router.post("", model_response=PaymentRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PaymentRead, status_code=status.HTTP_201_CREATED)
 async def create_payment(
     data: PaymentCreate,
     request: Request,
@@ -39,7 +39,7 @@ async def create_payment(
     return result
 
 
-router.post("/{id}/refund", model_response=PaymentRead)
+@router.post("/{payment_id}/refund", response_model=PaymentRead)
 async def refund_payment(
     payment_id: int,
     request: Request,
@@ -63,7 +63,7 @@ async def refund_payment(
     return result
 
 
-router.post("/webhook", status_code=status.HTTP_200_OK)
+@router.post("/webhook", status_code=status.HTTP_200_OK)
 async def webhook(
     data: PaymentWebhook,
     repo: PaymentRepository = Depends(get_repo),

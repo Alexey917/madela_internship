@@ -1,9 +1,9 @@
-import enum, JSON
+import enum
 
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, func, String, Numeric, Enum
+from sqlalchemy import DateTime, func, String, Numeric, Enum, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
