@@ -96,6 +96,17 @@ class ServiceSaga:
             order_id, SagaStatus.CANCELLED, last_error=reason or "inventory_failed"
         )
         await self.repo.update_status(order_id, OrderStatus.CANCELLED)
+
+        await enqueue_event(
+            self.session,
+            event_type="order.cancelled",
+            payload={
+                "order_id": order_id,
+                "user_id": order.user_id,
+                "reason": "inventory_failed",
+            },
+        )
+
         await self.session.commit()
         logger.info("SAGA: order_id=%s → CANCELLED (inventory failed)", order_id)
 
@@ -132,6 +143,17 @@ class ServiceSaga:
 
         await self.repo.update_status(order_id, OrderStatus.COMPLETED)
         await self.repo.update_saga_status(order_id, SagaStatus.COMPLETED)
+
+        await enqueue_event(
+            self.session,
+            event_type="order.completed",
+            payload={
+                "order_id": order_id,
+                "user_id": order.user_id,
+                "total_amount": str(order.total_amount),
+            },
+        )
+
         await self.session.commit()
         logger.info("SAGA: order_id=%s → COMPLETED", order_id)
 
@@ -185,6 +207,17 @@ class ServiceSaga:
 
         await self.repo.update_status(order_id, OrderStatus.CANCELLED)
         await self.repo.update_saga_status(order_id, SagaStatus.CANCELLED)
+
+        await enqueue_event(
+            self.session,
+            event_type="order.cancelled",
+            payload={
+                "order_id": order_id,
+                "user_id": order.user_id,
+                "reason": "released",
+            },
+        )
+
         await self.session.commit()
         logger.info("SAGA: order_id=%s → CANCELLED (released)", order_id)
 
