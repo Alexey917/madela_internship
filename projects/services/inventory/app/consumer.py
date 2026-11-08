@@ -28,6 +28,8 @@ async def start_consumer() -> None:
 
     queue = await broker._channel.declare_queue(QUEUE_NAME, durable = True)
     await queue.bind(exchange, ROUTING_KEY)
+    await queue.bind(exchange, routing_key="inventory.commit")
+    await queue.bind(exchange, routing_key="inventory.release")
 
     logger.info("Inventory consumer started: queue=%s, routing_key=%s", QUEUE_NAME, ROUTING_KEY)
 
@@ -36,9 +38,15 @@ async def start_consumer() -> None:
             async with message.process():
                 try:
                     payload = json.loads(message.body)
-                    await _handle_inventory_reserve(payload)
+                    routing_key = message.routing_key
+                    if routing_key == "inventory.reserve":
+                        await _handle_inventory_reserve(payload)
+                    elif routing_key == "inventory.commit":
+                        await _handle_inventory_commit(payload)
+                    elif routing_key == "inventory.release":
+                        await _handle_inventory_release(payload)
                 except Exception:
-                    logger.exception("Failed to process inventory.reserve")
+                    logger.exception("Failed to process message")
 
 
 async def _handle_inventory_reserve(payload: dict) -> None:
@@ -90,6 +98,42 @@ async def _handle_inventory_reserve(payload: dict) -> None:
             }
         )
         logger.info("Reserved all items for order_id=%s", order_id)
+
+
+async def _handle_inventory_commit(payload: dict) -> None:
+    order_id = payload.get("order_id")
+    items = payload.get("items", [])
+    if not order_id or not items:
+        return
+    async with SessionLocal() as session:
+        repo = StockRepository(session)
+        for item in items:
+            await repo.commit(item["product_id"], item["quantity"])
+    logger.info("Committed items for order_id=%s", order_id)
+
+
+async def _handle_inventory_release(payload: dict) -> None:
+    order_id = payload.get("order_id")
+    items = payload.get("items", [])
+    if not order_id or not items:
+        return
+    async with SessionLocal() as session:
+        repo = StockRepository(session)
+        for item in items:
+            stock = await repo.release(item["product_id"], item["quantity"])
+            if stock is None:
+                logger.warning(
+                    "Release no-op for product_id=%s (nothing reserved)",
+                    item["product_id"],
+                )
+        
+        # Публикуем inventory.released
+        await _publish(
+            session,
+            event_type="inventory.released",
+            payload={"order_id": order_id, "items": items},
+        )
+    logger.info("Released items for order_id=%s", order_id)
 
 
 async def _publish(event_type: str, payload: dict) -> None:
