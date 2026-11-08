@@ -8,6 +8,7 @@ from app.db import engine
 from app.broker import broker
 from app.outbox import outbox_worker
 from app.consumer import start_inventory_consumer, start_payment_consumer
+from app.timeout_worker import timeout_worker
 
 
 @asynccontextmanager
@@ -16,12 +17,13 @@ async def lifespan(app: FastAPI):
     worker_task = asyncio.create_task(outbox_worker())
     inv_consumer_task = asyncio.create_task(start_inventory_consumer())
     pay_consumer_task = asyncio.create_task(start_payment_consumer())
+    timeout_task = asyncio.create_task(timeout_worker())
 
     yield
 
-    for task in (inv_consumer_task, pay_consumer_task, worker_task):
+    for task in (inv_consumer_task, pay_consumer_task, worker_task, timeout_task):
         task.cancel()
-    for task in (inv_consumer_task, pay_consumer_task, worker_task):
+    for task in (inv_consumer_task, pay_consumer_task, worker_task, timeout_task):
         try:
             await task
         except asyncio.CancelledError:

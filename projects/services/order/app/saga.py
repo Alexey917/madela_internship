@@ -8,6 +8,7 @@ from app.outbox import enqueue_event
 from app.repository import OrderRepository
 
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

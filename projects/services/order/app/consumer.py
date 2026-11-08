@@ -5,7 +5,7 @@ from app.broker import broker
 from app.db import SessionLocal
 from app.saga import SagaService
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def start_inventory_consumer() -> None:
