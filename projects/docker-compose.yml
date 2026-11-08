@@ -1,0 +1,48 @@
+services:
+  notification-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+      POSTGRES_DB: notifications_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notifications_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: catalog
+      RABBITMQ_DEFAULT_PASS: catalog
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://notification:notification@notification-postgres:5432/notifications_db
+      RABBITMQ_URL: amqp://shop:shop@rabbitmq:5672/
+      SERVICE_NAME: notification-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8005:8000"
+    depends_on:
+      notification-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  notification_pg_data:
