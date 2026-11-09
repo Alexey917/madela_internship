@@ -14,6 +14,7 @@ import { motion } from 'motion/react';
 import { api } from '../api/client';
 import { OrderStatusModal } from './OrderStatusModal';
 import type { Product } from '../types';
+import { getErrorMessage }from '../utils/errors'
 
 const { Text } = Typography;
 
@@ -66,7 +67,7 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
       onOrdered();
     } catch (e: unknown) {
       if(typeof e === 'string') {
-        message.error(`Ошибка: ${e.message}`);
+        message.error(`Ошибка: ${getErrorMessage(e)}`);
       }
       
     } finally {

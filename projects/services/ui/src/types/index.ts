@@ -45,3 +45,9 @@ export interface Order {
   created_at: string;
   updated_at: string;
 }
+
+export interface AuthUser {
+  user_id: number;
+  role: 'user' | 'admin';
+  token: string;
+}

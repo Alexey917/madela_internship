@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { App as AntApp, Layout, Typography } from 'antd';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { App as AntApp, Layout, Typography, Menu } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartModal } from './components/CartModal';
@@ -10,6 +12,7 @@ const { Title } = Typography;
 
 function AppContent() {
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const { user, logout } = useAuth();
   const [cartOpen, setCartOpen] = useState(false);
 
   const addToCart = (product: Product) => {
@@ -45,6 +48,11 @@ function AppContent() {
         <Title level={3} style={{ color: 'white', margin: 0 }}>
           🎲 Board Games Shop
         </Title>
+        <Menu theme="dark" mode="horizontal" items={[
+          { key: 'catalog', label: <a href="/">Каталог</a> },
+          ...(user?.role === 'admin' ? [{ key: 'admin', label: <a href="/admin">Админка</a> }] : []),
+          ...(user ? [{ key: 'logout', label: <a onClick={logout}>Выйти ({user.role})</a> }] : [{ key: 'login', label: <a href="/login">Войти</a> }]),
+        ]} />
         <a onClick={() => setCartOpen(true)} style={{ color: 'white', fontSize: 18 }}>
           <ShoppingCartOutlined /> Корзина ({totalItems})
         </a>
@@ -70,8 +78,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AntApp>
-      <AppContent />
-    </AntApp>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

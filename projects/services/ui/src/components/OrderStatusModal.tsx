@@ -10,6 +10,7 @@ import {
 import { motion } from 'motion/react';
 import { api } from '../api/client';
 import type { Order, OrderStatus } from '../types';
+import { getErrorMessage }from '../utils/errors'
 
 const { Text } = Typography;
 
@@ -51,10 +52,11 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
         if (o.status !== 'completed' && o.status !== 'cancelled' && o.status !== 'failed') {
           timer = setTimeout(poll, 1000);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const error = getErrorMessage(e)
         if (cancelled) return;
-        setError(e.message);
-        message.error(`Ошибка: ${e.message}`);
+        setError(error);
+         message.error(`Ошибка: ${error}`);
       }
     };
 

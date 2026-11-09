@@ -19,3 +19,33 @@ services:
       - "3000:80"    # прямой доступ (для отладки)
     depends_on:
       - gateway
+  
+  auth-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: auth_db
+    ports: ["5438:5432"]
+    volumes: [auth_pg_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  auth:
+    build: { context: ./services/auth, dockerfile: Dockerfile }
+    environment:
+      DATABASE_URL: postgresql+asyncpg://auth:auth@auth-postgres:5432/auth_db
+      SERVICE_NAME: auth-service
+      JWT_SECRET: super-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "60"
+    ports: ["8006:8000"]
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+
+volumes: 
+  auth_pg_data:
