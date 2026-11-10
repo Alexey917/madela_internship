@@ -1,18 +1,23 @@
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { App as AntApp, Layout, Menu, Button, Space, Tag } from 'antd';
+import { ShoppingCartOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { App as AntApp, Layout, Typography, Menu } from 'antd';
-import { ShoppingCartOutlined } from '@ant-design/icons';
+import { useAuth } from './hooks/useAuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { LoginPage } from './pages/LoginPage';
 import { CatalogPage } from './pages/CatalogPage';
+// import { AdminPage } from './pages/AdminPage';
 import { CartModal } from './components/CartModal';
 import type { Product } from './types';
 
 const { Header, Content } = Layout;
-const { Title } = Typography;
 
-function AppContent() {
-  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+function AppLayout() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
   const addToCart = (product: Product) => {
@@ -29,11 +34,7 @@ function AppContent() {
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
-    setCart((prev) =>
-      prev.map((c) =>
-        c.product.id === productId ? { ...c, quantity } : c
-      )
-    );
+    setCart((prev) => prev.map((c) => (c.product.id === productId ? { ...c, quantity } : c)));
   };
 
   const removeFromCart = (productId: number) => {
@@ -42,33 +43,70 @@ function AppContent() {
 
   const totalItems = cart.reduce((s, c) => s + c.quantity, 0);
 
+  if (location.pathname === '/login') {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    );
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#001529' }}>
-        <Title level={3} style={{ color: 'white', margin: 0 }}>
-          🎲 Board Games Shop
-        </Title>
-        <Menu theme="dark" mode="horizontal" items={[
-          { key: 'catalog', label: <a href="/">Каталог</a> },
-          ...(user?.role === 'admin' ? [{ key: 'admin', label: <a href="/admin">Админка</a> }] : []),
-          ...(user ? [{ key: 'logout', label: <a onClick={logout}>Выйти ({user.role})</a> }] : [{ key: 'login', label: <a href="/login">Войти</a> }]),
-        ]} />
-        <a onClick={() => setCartOpen(true)} style={{ color: 'white', fontSize: 18 }}>
-          <ShoppingCartOutlined /> Корзина ({totalItems})
-        </a>
+      <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <div style={{ color: 'white', fontSize: 18, fontWeight: 600 }}>🎲 Board Games Shop</div>
+          <Menu
+            theme="dark"
+            mode="horizontal"
+            selectedKeys={[location.pathname]}
+            onClick={({ key }) => navigate(key)}
+            items={[
+              { key: '/', label: 'Каталог' },
+              ...(user?.role === 'admin' ? [{ key: '/admin', label: 'Админка' }] : []),
+            ]}
+            style={{ flex: 1, minWidth: 0 }}
+          />
+        </div>
+
+        <Space>
+          {user && (
+            <>
+              <Button
+                type="text"
+                icon={<ShoppingCartOutlined />}
+                onClick={() => setCartOpen(true)}
+                style={{ color: 'white' }}
+              >
+                Корзина ({totalItems})
+              </Button>
+              <Tag color={user.role === 'admin' ? 'gold' : 'blue'} icon={<UserOutlined />}>
+                {user.email} ({user.role})
+              </Tag>
+              <Button type="text" icon={<LogoutOutlined />} onClick={logout} style={{ color: 'white' }}>
+                Выйти
+              </Button>
+            </>
+          )}
+        </Space>
       </Header>
 
-      <Content style={{ padding: 24, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        <CatalogPage onBuy={addToCart} />
+      <Content style={{ padding: 24, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+        <Routes>
+          <Route path="/" element={
+            <ProtectedRoute><CatalogPage onBuy={addToCart} /></ProtectedRoute>
+          } />
+          {/* <Route path="/admin" element={
+            <ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>
+          } /> */}
+        </Routes>
       </Content>
-      
+
       <CartModal
         open={cartOpen}
         cart={cart}
         onClose={() => setCartOpen(false)}
-        onOrdered={() => {
-          setCart([]);
-        }}
+        onOrdered={() => setCart([])}
         onQuantityChange={updateQuantity}
         onRemove={removeFromCart}
       />
@@ -79,9 +117,11 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <AntApp>
+        <AuthProvider>
+          <AppLayout />
+        </AuthProvider>
+      </AntApp>
     </BrowserRouter>
   );
 }

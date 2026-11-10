@@ -15,6 +15,7 @@ import { api } from '../api/client';
 import { OrderStatusModal } from './OrderStatusModal';
 import type { Product } from '../types';
 import { getErrorMessage }from '../utils/errors'
+import { useAuth } from '../hooks/useAuthContext';
 
 const { Text } = Typography;
 
@@ -36,6 +37,7 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
+  const { user } = useAuth()
 
   const totalAmount = cart.reduce(
     (s, c) => s + parseFloat(c.product.price) * c.quantity,
@@ -44,6 +46,11 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
 
   const handleOrder = async () => {
     if (cart.length === 0) return;
+
+    if (!user) {
+      message.error('Необходимо войти в систему');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -59,7 +66,8 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
             unit_price: c.product.price,
           })),
         },
-        idempotencyKey
+        idempotencyKey,
+        user.token
       );
 
       message.success(`Заказ #${order.id} создан`);

@@ -48,6 +48,15 @@ export interface Order {
 
 export interface AuthUser {
   user_id: number;
+  email: string;
   role: 'user' | 'admin';
   token: string;
+}
+
+export interface Stock {
+  product_id: number;
+  available: number;
+  reserved: number;
+  created_at?: string;
+  updated_at?: string;
 }

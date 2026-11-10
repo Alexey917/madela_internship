@@ -1,10 +1,23 @@
-import { Navigate } from 'react-router-dom';
-import type { ReactNode } from 'react'
-import { useAuth } from '../contexts/AuthContext';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuthContext';
+import type { ReactNode } from 'react';
 
-export function ProtectedRoute({ children, role }: { children: ReactNode; role?: 'user' | 'admin' }) {
+interface Props {
+  children: ReactNode;
+  role?: 'user' | 'admin';
+}
+
+export function ProtectedRoute({ children, role }: Props) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (role && user.role !== role) return <Navigate to="/" replace />;
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (role && user.role !== role) {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 }

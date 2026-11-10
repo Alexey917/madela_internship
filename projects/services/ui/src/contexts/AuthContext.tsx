@@ -1,43 +1,43 @@
-import { createContext, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react'
+import { api } from '../api/client';
 import type { AuthUser } from '../types';
-import { api } from '../api/client'
+import { AuthContext } from '../hooks/useAuthContext';
 
-interface AuthContextValue {
-  user: AuthUser | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const STORAGE_KEY = 'boardgames.auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const stored = localStorage.getItem('auth');
-    return stored ? JSON.parse(stored) : null;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
   });
 
   const login = async (email: string, password: string) => {
     const data = await api.login(email, password);
     const authUser: AuthUser = {
       user_id: data.user_id,
+      email: data.email,
       role: data.role as 'user' | 'admin',
       token: data.access_token,
     };
     setUser(authUser);
-    localStorage.setItem('auth', JSON.stringify(authUser));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('auth');
+    localStorage.removeItem(STORAGE_KEY);
   };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

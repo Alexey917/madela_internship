@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { App, Button, Card, Form, Input } from 'antd';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../utils/errors';
 

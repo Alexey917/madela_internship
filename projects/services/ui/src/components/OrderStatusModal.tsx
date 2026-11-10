@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 import { api } from '../api/client';
 import type { Order, OrderStatus } from '../types';
 import { getErrorMessage }from '../utils/errors'
+import { useAuth } from '../hooks/useAuthContext';
 
 const { Text } = Typography;
 
@@ -36,16 +37,17 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
   const { message } = App.useApp();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth()
 
   useEffect(() => {
-    if (!open) return;
+    if (!open  || !user) return;
 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
     const poll = async () => {
       try {
-        const o = await api.getOrder(orderId);
+        const o = await api.getOrder(orderId, user.token);
         if (cancelled) return;
         setOrder(o);
 
