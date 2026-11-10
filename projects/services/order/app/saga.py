@@ -103,6 +103,7 @@ class ServiceSaga:
             payload={
                 "order_id": order_id,
                 "user_id": order.user_id,
+                "user_email": order.user_email,
                 "reason": "inventory_failed",
             },
         )
@@ -150,6 +151,7 @@ class ServiceSaga:
             payload={
                 "order_id": order_id,
                 "user_id": order.user_id,
+                "user_email": order.user_email,
                 "total_amount": str(order.total_amount),
             },
         )
@@ -214,6 +216,7 @@ class ServiceSaga:
             payload={
                 "order_id": order_id,
                 "user_id": order.user_id,
+                "user_email": order.user_email,
                 "reason": "released",
             },
         )

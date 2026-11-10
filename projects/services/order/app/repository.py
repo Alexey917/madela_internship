@@ -11,7 +11,7 @@ class OrderRepository:
         order = await self.session.execute(select(Order).where(Order.id == order_id))
         return order.scalar_one_or_none()
 
-    async def create(self, user_id: str, items: list[dict]) -> Order:
+    async def create(self, user_id: str,  items: list[dict], user_email: str | None,) -> Order:
         """
         Создаёт заказ с items и saga_state.
         items: [{"product_id": int, "quantity": int, "unit_price": Decimal}]
@@ -21,6 +21,7 @@ class OrderRepository:
 
         order = Order(
             user_id=user_id,
+            user_email=user_email,
             status=OrderStatus.PENDING,
             total_amount=total,
         )

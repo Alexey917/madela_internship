@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
 from fastapi.responses import JSONResponse
 
 from app.dependencies import get_repo, get_saga
@@ -30,16 +30,22 @@ async def get_order(
 async def create_order(
     data: OrderCreate,
     request: Request,
+    x_user_id: str | None = Header(default=None, alias="X-User-Id"),
+    x_user_email: str | None = Header(default=None, alias="X-User-Email"),
     repo: OrderRepository = Depends(get_repo),
     saga: SagaService = Depends(get_saga),
 ) -> OrderRead:
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="User not authenticated")
+    
     idem_key = await check_idempotency(request)
     cached = await get_cached_response(idem_key)
     if cached is not None:
         return JSONResponse(status_code=cached["status_code"], content=cached["body"])
 
     order = await repo.create(
-        user_id=data.user_id,
+        user_id=x_user_id,
+        user_email=x_user_email,
         items=[
             {
                 "product_id": i.product_id,

@@ -13,7 +13,6 @@ class OrderItemCreate(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    user_id: str = Field(..., min_length=1, max_length=100)
     items: list[OrderItemCreate] = Field(..., min_length=1)
 
 
@@ -30,6 +29,7 @@ class OrderRead(BaseModel):
 
     id: int
     user_id: str
+    user_email: str | None
     status: OrderStatus
     total_amount: Decimal
     items: list[OrderItemRead]

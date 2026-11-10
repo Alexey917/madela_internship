@@ -38,6 +38,7 @@ class Order(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    user_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[OrderStatus] = mapped_column(
         Enum(OrderStatus, name="order_status", native_enum=False),
         nullable=False,
