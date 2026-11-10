@@ -1,4 +1,16 @@
 services:
+  inventory-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - inventory_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory_db"]
   catalog-postgres:
     image: postgres:16-alpine
     environment:
@@ -55,6 +67,20 @@ services:
       timeout: 5s
       retries: 5
 
+  inventory:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://inventory:inventory@inventory-postgres:5432/inventory_db
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/0
+      SERVICE_NAME: inventory-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8002:8000"
+    depends_on:
+      inventory-postgres:
   catalog:
     build:
       context: ./services/catalog
@@ -92,5 +118,6 @@ services:
         condition: service_healthy
 
 volumes:
+  inventory_pg_data:
   catalog_pg_data:
   payment_pg_data:
