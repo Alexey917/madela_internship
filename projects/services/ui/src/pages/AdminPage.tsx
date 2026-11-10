@@ -25,9 +25,10 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import { api } from '../api/client';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import type { Product, Stock } from '../types';
+import type { TableProps } from 'antd';
 
 const { Title } = Typography;
 
@@ -79,6 +80,7 @@ export function AdminPage() {
 
   useEffect(() => {
     if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProducts().then(() => {
       // stocks загружаются после products
     });
@@ -86,6 +88,7 @@ export function AdminPage() {
 
   useEffect(() => {
     if (products.length > 0 && token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadStocks(products);
     }
   }, [products, token]);
@@ -160,7 +163,7 @@ export function AdminPage() {
     }
   };
 
-  const columns = [
+  const columns: TableProps<Product>['columns'] = [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -216,7 +219,7 @@ export function AdminPage() {
         { text: 'Активные', value: true },
         { text: 'Скрытые', value: false },
       ],
-      onFilter: (value: boolean, r: Product) => r.is_active === value,
+      onFilter: (value, r: Product) => r.is_active === value,
       render: (v: boolean) => (
         <Tag color={v ? 'green' : 'red'}>{v ? 'Активен' : 'Скрыт'}</Tag>
       ),
