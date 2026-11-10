@@ -6,6 +6,7 @@ services:
     ports:
       - "8080:80"
     depends_on:
+      - auth
       - catalog
       - inventory
       - payment

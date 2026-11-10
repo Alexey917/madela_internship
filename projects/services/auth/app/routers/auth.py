@@ -54,3 +54,31 @@ async def verify(response: Response, authorization: str | None = Header(default=
         role=payload.get("role"),
         email=email
     )
+
+
+@router.get("/verify-admin", response_model=VerifyResponse)
+async def verify_admin(
+    response: Response,
+    authorization: str | None = Header(default=None),
+) -> VerifyResponse:
+    """Проверка JWT + role=admin для Gateway."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+    token = authorization.replace("Bearer ", "").strip()
+    payload = decode_token(token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    role = payload.get("role", "user")
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+    user_id = int(payload["sub"])
+    email = payload.get("email", "")
+
+    response.headers["X-User-Id"] = str(user_id)
+    response.headers["X-User-Role"] = role
+    response.headers["X-User-Email"] = email
+
+    return VerifyResponse(valid=True, user_id=user_id, role=role, email=email)
