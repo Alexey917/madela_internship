@@ -15,6 +15,22 @@ services:
       timeout: 3s
       retries: 5
   
+  payment-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+      POSTGRES_DB: payments_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payments_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     ports:
@@ -53,6 +69,22 @@ services:
       - "8001:8000"
     depends_on:
       catalog-postgres:
+  
+  payment:
+    build:
+      context: ./services/payment
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://payment:payment@payment-postgres:5432/payments_db
+      REDIS_URL: redis://redis:6379/2
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      MOCK_GATEWAY_URL: http://localhost:8000/mock-gateway
+      SERVICE_NAME: payment-service
+      LOG_LEVEL: INFO  
+    ports:
+      - "8003:8000"
+    depends_on:
+      payment-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -61,3 +93,4 @@ services:
 
 volumes:
   catalog_pg_data:
+  payment_pg_data:
