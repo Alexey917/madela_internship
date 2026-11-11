@@ -39,7 +39,7 @@ export function LoginPage() {
         </Form>
         <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>
           <div>Админ: admin@shop.local / admin123</div>
-          <div>Юзер: user@shop.local / user123</div>
+          <div>Юзер: pvpuvk@yandex.ru / user123</div>
         </div>
       </Card>
     </div>
