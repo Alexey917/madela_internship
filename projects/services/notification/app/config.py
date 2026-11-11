@@ -9,5 +9,13 @@ class Settings(BaseSettings):
     service_name: str = "notification-service"
     log_level: str = "INFO"
 
+    smtp_host: str
+    smtp_port: int = 465
+    smtp_user: str
+    smtp_password: str
+    smtp_from: str
+    smtp_use_tls: bool = False
+    smtp_start_tls: bool = True
+
 
 settings = Settings()
