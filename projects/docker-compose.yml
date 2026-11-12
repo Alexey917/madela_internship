@@ -1,4 +1,19 @@
 services:
+  notification-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+      POSTGRES_DB: notifications_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notifications_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   gateway:
     build:
       context: ./gateway
@@ -125,6 +140,28 @@ volumes:
       interval: 10s
       timeout: 5s
       retries: 5
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    env_file:
+      - ./services/notification/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://notification:notification@notification-postgres:5432/notifications_db
+      RABBITMQ_URL: amqp://shop:shop@rabbitmq:5672/
+      SERVICE_NAME: notification-service
+      LOG_LEVEL: INFO
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
+      SMTP_START_TLS: ${SMTP_START_TLS:-true}
+    ports:
+      - "8005:8000"
+    depends_on:
+      notification-postgres:
   order:
     build:
       context: ./services/order
@@ -206,6 +243,7 @@ volumes:
   order_pg_data:
 
 volumes:
+  notification_pg_data:
   inventory_pg_data:
   catalog_pg_data:
   payment_pg_data:
