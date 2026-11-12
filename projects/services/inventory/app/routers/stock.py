@@ -1,6 +1,7 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import JSONResponse
+from typing import Annotated
 
 from app.dependencies import get_repo
 from app.repository import StockRepository
@@ -36,6 +37,7 @@ async def get_stock(
 async def reserve_stock(
     data: StockReserveRequest,
     request: Request,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     repo: StockRepository = Depends(get_repo)
 ) -> StockRead:
     idempotency_key = await check_idempotency(request)
@@ -76,6 +78,7 @@ async def reserve_stock(
 async def commit_stock(
     data: StockCommitRequest,
     request: Request,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     repo: StockRepository = Depends(get_repo)    
 ) -> StockRead:
     idempotency_key = await check_idempotency(request)
@@ -105,6 +108,7 @@ async def commit_stock(
 async def commit_stock(
     data: StockReserveRequest,
     request: Request,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     repo: StockRepository = Depends(get_repo)    
 ) -> StockRead:
     idempotency_key = await check_idempotency(request)

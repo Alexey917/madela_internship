@@ -87,6 +87,13 @@ class StockRepository:
         if stock.available < quantity:
             return None
 
+        if stock.reserved < quantity:
+            logger.warning(
+                "release: product_id=%s, reserved=%s < quantity=%s",
+                product_id, stock.reserved, quantity,
+            )
+            return None
+
         stock.reserved -= quantity
         stock.available += quantity
 

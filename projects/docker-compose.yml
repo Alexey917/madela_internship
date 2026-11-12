@@ -31,6 +31,18 @@ services:
     volumes: [auth_pg_data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+  order-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: order
+      POSTGRES_PASSWORD: order
+      POSTGRES_DB: orders_db
+    ports:
+      - "5436:5432"
+    volums:
+      - order_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order -d orders_db"]
   inventory-postgres:
     image: postgres:16-alpine
     environment:
@@ -113,6 +125,20 @@ volumes:
       interval: 10s
       timeout: 5s
       retries: 5
+  order:
+    build:
+      context: ./services/order
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://order:order@order-postgres:5432/orders_db
+      REDIS_URL: redis://redis:6379/3
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      SERVICE_NAME: order-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8004:8000"
+    depends_on:
+      order-postgres:
 
   inventory:
     build:
@@ -128,6 +154,12 @@ volumes:
       - "8002:8000"
     depends_on:
       inventory-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   catalog:
     build:
       context: ./services/catalog
@@ -142,6 +174,11 @@ volumes:
       - "8001:8000"
     depends_on:
       catalog-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   
   payment:
     build:
@@ -163,6 +200,10 @@ volumes:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+
+volumes:
+  order_pg_data:
 
 volumes:
   inventory_pg_data:
