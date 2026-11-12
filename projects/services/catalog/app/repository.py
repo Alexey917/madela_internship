@@ -84,6 +84,7 @@ class ProductRepository:
         )
         print(f"COMMITTING: session={id(self.session)}", flush=True)
         await self.session.commit()
+        await self.session.refresh(product)
         print("COMMIT_DONE", flush=True)
         return product
 
@@ -142,7 +143,7 @@ class ProductRepository:
 
         await enqueue_event(
             self.session,
-            event_type = "product.created",
+            event_type = "product.updated",
             payload = {
                 "id": product.id,
                 "name": product.name,
@@ -152,5 +153,6 @@ class ProductRepository:
         )
 
         await self.session.commit()
+        await self.session.refresh(product)
         return product
         

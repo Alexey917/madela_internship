@@ -14,6 +14,50 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth
+      - catalog
+      - inventory
+      - payment
+      - order
+      - ui
+  ui:
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"    # прямой доступ (для отладки)
+    depends_on:
+      - gateway
+  
+  auth-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: auth_db
+    ports: ["5438:5432"]
+    volumes: [auth_pg_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+  order-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: order
+      POSTGRES_PASSWORD: order
+      POSTGRES_DB: orders_db
+    ports:
+      - "5436:5432"
+    volums:
+      - order_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order -d orders_db"]
   inventory-postgres:
     image: postgres:16-alpine
     environment:
@@ -68,6 +112,21 @@ services:
       timeout: 3s
       retries: 5
 
+  auth:
+    build: { context: ./services/auth, dockerfile: Dockerfile }
+    environment:
+      DATABASE_URL: postgresql+asyncpg://auth:auth@auth-postgres:5432/auth_db
+      SERVICE_NAME: auth-service
+      JWT_SECRET: super-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "60"
+    ports: ["8006:8000"]
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+
+volumes: 
+  auth_pg_data:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     environment:
@@ -103,6 +162,20 @@ services:
       - "8005:8000"
     depends_on:
       notification-postgres:
+  order:
+    build:
+      context: ./services/order
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://order:order@order-postgres:5432/orders_db
+      REDIS_URL: redis://redis:6379/3
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      SERVICE_NAME: order-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8004:8000"
+    depends_on:
+      order-postgres:
 
   inventory:
     build:
@@ -118,6 +191,12 @@ services:
       - "8002:8000"
     depends_on:
       inventory-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   catalog:
     build:
       context: ./services/catalog
@@ -132,6 +211,11 @@ services:
       - "8001:8000"
     depends_on:
       catalog-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   
   payment:
     build:
@@ -153,6 +237,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+
+volumes:
+  order_pg_data:
 
 volumes:
   notification_pg_data:

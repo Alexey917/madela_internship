@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Request, status, HTTPException
+from fastapi import APIRouter, Depends, Request, status, HTTPException, Header
 from fastapi.responses import JSONResponse
+from typing import Annotated
 
 from app.schemas import PaymentRead, PaymentCreate, PaymentWebhook
 from app.repository import PaymentRepository
@@ -24,6 +25,7 @@ async def get_payment(
 async def create_payment(
     data: PaymentCreate,
     request: Request,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     repo: PaymentRepository = Depends(get_repo)
 ) -> PaymentRead:
     idem_key = await check_idempotency(request)
@@ -43,6 +45,7 @@ async def create_payment(
 async def refund_payment(
     payment_id: int,
     request: Request,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     repo: PaymentRepository = Depends(get_repo)
 ) -> PaymentRead:
     idem_key = await check_idempotency(request)
