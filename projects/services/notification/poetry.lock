@@ -2707,4 +2707,4 @@ reference = "gitverse"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "c80ec4dd464946ab58879ea46582505077f7697be1c4d22de60f92fe2bed69cf"
+content-hash = "be87e45a622f24a41ca40c4ec11ce0238e62b1bf53a4631bc36041deb19357bd"

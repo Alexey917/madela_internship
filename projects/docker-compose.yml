@@ -14,6 +14,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
   gateway:
     build:
       context: ./gateway
@@ -26,15 +27,13 @@ services:
       - inventory
       - payment
       - order
-      - ui
+
   ui:
     build:
       context: ./services/ui
       dockerfile: Dockerfile
     ports:
       - "3000:80"    # прямой доступ (для отладки)
-    depends_on:
-      - gateway
   
   auth-postgres:
     image: postgres:16-alpine
@@ -46,6 +45,7 @@ services:
     volumes: [auth_pg_data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+
   order-postgres:
     image: postgres:16-alpine
     environment:
@@ -54,10 +54,11 @@ services:
       POSTGRES_DB: orders_db
     ports:
       - "5436:5432"
-    volums:
+    volumes:
       - order_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U order -d orders_db"]
+
   inventory-postgres:
     image: postgres:16-alpine
     environment:
@@ -70,6 +71,7 @@ services:
       - inventory_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U inventory -d inventory_db"]
+
   catalog-postgres:
     image: postgres:16-alpine
     environment:
@@ -125,8 +127,6 @@ services:
       auth-postgres:
         condition: service_healthy
 
-volumes: 
-  auth_pg_data:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     environment:
@@ -140,6 +140,7 @@ volumes:
       interval: 10s
       timeout: 5s
       retries: 5
+
   notification:
     build:
       context: ./services/notification
@@ -151,17 +152,14 @@ volumes:
       RABBITMQ_URL: amqp://shop:shop@rabbitmq:5672/
       SERVICE_NAME: notification-service
       LOG_LEVEL: INFO
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM}
-      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
-      SMTP_START_TLS: ${SMTP_START_TLS:-true}
     ports:
       - "8005:8000"
     depends_on:
       notification-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   order:
     build:
       context: ./services/order
@@ -176,6 +174,11 @@ volumes:
       - "8004:8000"
     depends_on:
       order-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   inventory:
     build:
@@ -238,12 +241,10 @@ volumes:
       rabbitmq:
         condition: service_healthy
 
-
 volumes:
-  order_pg_data:
-
-volumes:
+  auth_pg_data:
   notification_pg_data:
   inventory_pg_data:
   catalog_pg_data:
   payment_pg_data:
+  order_pg_data:
