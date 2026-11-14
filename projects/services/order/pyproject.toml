@@ -38,6 +38,7 @@ dev = [
 [tool.poetry.dependencies]
 asyncpg = { version = ">=0.32.0,<0.33.0", source = "gitverse" }
 uvloop = { version = ">=0.23.0,<0.24.0", source = "gitverse" }
+sqlalchemy = { version = ">=2.1.8,<3.0.0", source = "gitverse" }
 
 [tool.poetry]
 package-mode = false

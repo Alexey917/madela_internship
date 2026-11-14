@@ -23,7 +23,7 @@ async def enqueue_event(
     message = OutboxMessage(
         event_type=event_type,
         routing_key=event_type,
-        payload=json.loads(json.dumps(payload), default=str)
+        payload=json.loads(json.dumps(payload, default=str))
     )
 
     session.add(message)

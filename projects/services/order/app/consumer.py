@@ -3,7 +3,7 @@ from aio_pika import ExchangeType
 
 from app.broker import broker
 from app.db import SessionLocal
-from app.saga import SagaService
+from app.saga import ServiceSaga
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ async def _handle_inventory_event(routing_key: str, payload: dict) -> None:
     logger.info("Received %s for order_id=%s", routing_key, order_id)
 
     async with SessionLocal() as session:
-        saga = SagaService(session)
+        saga = ServiceSaga(session)
 
         if routing_key == "inventory.reserved":
             await saga.on_inventory_reserved(order_id)
@@ -88,7 +88,7 @@ async def _handle_payment_event(routing_key: str, payload: dict) -> None:
     logger.info("Received %s for order_id=%s", routing_key, order_id)
 
     async with SessionLocal() as session:
-        saga = SagaService(session)
+        saga = ServiceSaga(session)
 
         if routing_key == "payment.succeeded":
             await saga.on_payment_succeeded(order_id)

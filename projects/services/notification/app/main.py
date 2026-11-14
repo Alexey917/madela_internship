@@ -13,7 +13,7 @@ from app.db import engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await broker.connect()
+    await broker.connection()
     order_consumer_task = asyncio.create_task(start_order_events_consumer())
     payment_consumer_task = asyncio.create_task(start_payment_events_consumer())
 

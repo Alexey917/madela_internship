@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.repository import OrderRepository
-from app.saga import SagaService
+from app.saga import ServiceSaga
 
 
 async def get_repo(
@@ -16,5 +16,5 @@ async def get_repo(
 
 async def get_saga(
     session: AsyncSession = Depends(get_session),
-) -> AsyncGenerator[SagaService, None]:
-    yield SagaService(session)
+) -> AsyncGenerator[ServiceSaga, None]:
+    yield ServiceSaga(session)

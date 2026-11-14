@@ -62,7 +62,7 @@ class OrderRepository:
         saga_status: SagaStatus,
         last_error: str | None=None
     ) -> SagaState | None:
-        result = self.session.execute(select(SagaState).where(SagaState.order_id == order_id))
+        result = await self.session.execute(select(SagaState).where(SagaState.order_id == order_id))
 
         saga = result.scalar_one_or_none()
 

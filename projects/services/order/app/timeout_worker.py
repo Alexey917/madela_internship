@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from app.db import SessionLocal
 from app.models import Order, OrderStatus, SagaState, SagaStatus
-from app.saga import SagaService
+from app.saga import ServiceSaga
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ async def timeout_worker() -> None:
                     )
                 )
                 for saga_state in pending.scalars().all():
-                    saga = SagaService(session)
+                    saga = ServiceSaga(session)
                     await saga.on_inventory_failed(saga_state.order_id, "timeout_inventory")
 
                 # RESERVED (payment.process не ответил)
@@ -36,7 +36,7 @@ async def timeout_worker() -> None:
                     )
                 )
                 for saga_state in reserved.scalars().all():
-                    saga = SagaService(session)
+                    saga = ServiceSaga(session)
                     await saga.on_payment_failed(saga_state.order_id, "timeout_payment")
 
         except Exception:

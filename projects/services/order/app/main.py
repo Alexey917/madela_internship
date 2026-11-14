@@ -9,6 +9,24 @@ from app.broker import broker
 from app.outbox import outbox_worker
 from app.consumer import start_inventory_consumer, start_payment_consumer
 from app.timeout_worker import timeout_worker
+from app.routers import orders
+
+import logging
+import sys
+
+def setup_logging():
+    for name in ["app", "app.consumer", "app.saga", "app.outbox", "app.repository", "app.timeout_worker"]:
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+        if not logger.handlers:
+            handler = logging.StreamHandler(sys.stdout)
+            handler.setFormatter(logging.Formatter(
+                "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+            ))
+            logger.addHandler(handler)
+
+setup_logging()
 
 
 @asynccontextmanager
@@ -35,6 +53,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.service_name, lifespan=lifespan)
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
+app.include_router(orders.router)
 
 
 @app.get("/health")

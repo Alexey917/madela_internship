@@ -8,7 +8,7 @@ from app.idempotency import (
     store_response,
 )
 from app.repository import OrderRepository
-from app.saga import SagaService
+from app.saga import ServiceSaga
 from app.schemas import OrderCreate, OrderRead
 
 
@@ -33,7 +33,7 @@ async def create_order(
     x_user_id: str | None = Header(default=None, alias="X-User-Id"),
     x_user_email: str | None = Header(default=None, alias="X-User-Email"),
     repo: OrderRepository = Depends(get_repo),
-    saga: SagaService = Depends(get_saga),
+    saga: ServiceSaga = Depends(get_saga),
 ) -> OrderRead:
     if not x_user_id:
         raise HTTPException(status_code=401, detail="User not authenticated")
@@ -57,7 +57,7 @@ async def create_order(
     )
 
     # Запускаем SAGA
-    await saga.start(order.id)
+    await saga.start(order.id, order.items)
 
     result = OrderRead.model_validate(order)
     body = result.model_dump(mode="json")
@@ -69,7 +69,7 @@ async def create_order(
 async def cancel_order(
     order_id: int,
     repo: OrderRepository = Depends(get_repo),
-    saga: SagaService = Depends(get_saga),
+    saga: ServiceSaga = Depends(get_saga),
 ) -> OrderRead:
     try:
         await saga.cancel(order_id)

@@ -4,6 +4,17 @@ const API_BASE = '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const resp = await fetch(`${API_BASE}${path}`, options);
+
+  if (resp.status === 401) {
+    // Токен истёк или невалиден — разлогиниваем
+    localStorage.removeItem("boardgames.auth");
+    // Если мы не на странице логина — редиректим
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized");
+  }
+
   if (!resp.ok) {
     const error = await resp.json().catch(() => ({ detail: `HTTP ${resp.status}` }));
     throw new Error(error.detail || `HTTP ${resp.status}`);
