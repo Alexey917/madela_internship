@@ -129,7 +129,6 @@ async def _handle_inventory_release(payload: dict) -> None:
         
         # Публикуем inventory.released
         await _publish(
-            session,
             event_type="inventory.released",
             payload={"order_id": order_id, "items": items},
         )
