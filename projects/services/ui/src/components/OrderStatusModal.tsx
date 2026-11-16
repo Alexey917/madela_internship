@@ -139,6 +139,14 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
             </div>
           )}
 
+          {isFinal && order.status === 'failed' && (
+            <Result
+              status="error"
+              title="Заказ не выполнен"
+              subTitle="Произошла ошибка при обработке. Попробуйте позже."
+            />
+          )}
+
           <div style={{ marginTop: 24 }}>
             <Text strong>Позиции:</Text>
             <ul>

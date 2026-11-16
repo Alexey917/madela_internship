@@ -57,7 +57,7 @@ async def _handle_payment_process(payload: dict) -> None:
 
     async with SessionLocal() as session:
         repo = PaymentRepository(session)
-        payment = await repo.create_and_charge(order_id, amount)
+        payment = await repo.create_and_charge(str(order_id), amount)
 
     logger.info(
         "Payment processed: order_id=%s, payment_id=%s, status=%s",

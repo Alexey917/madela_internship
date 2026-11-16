@@ -24,6 +24,7 @@ class ServiceSaga:
 
     async def start(self, order_id: int, items: list[dict]) -> None:
         """Запускает SAGA: публикует inventory.reserve."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             logger.warning("SAGA start: order %s not found", order_id)
@@ -45,6 +46,7 @@ class ServiceSaga:
 
     async def on_inventory_reserved(self, order_id: int) -> None:
         """Получен inventory.reserved → публикуем payment.process."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             logger.warning("on_inventory_reserved: order %s not found", order_id)
@@ -74,6 +76,7 @@ class ServiceSaga:
 
     async def on_inventory_failed(self, order_id: int, reason: str | None = None) -> None:
         """Получен inventory.failed → сразу компенсация (Payment не вызывался)."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             logger.warning("on_inventory_failed: order %s not found", order_id)
@@ -114,6 +117,7 @@ class ServiceSaga:
 
     async def on_payment_succeeded(self, order_id: int) -> None:
         """Получен payment.succeeded → публикуем inventory.commit → COMPLETED."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             logger.warning("on_payment_succeeded: order %s not found", order_id)
@@ -162,6 +166,7 @@ class ServiceSaga:
 
     async def on_payment_failed(self, order_id: int, reason: str | None = None) -> None:
         """Получен payment.failed → компенсация (release)."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             logger.warning("on_payment_failed: order %s not found", order_id)
@@ -200,6 +205,7 @@ class ServiceSaga:
 
     async def on_inventory_released(self, order_id: int) -> None:
         """Получен inventory.released → CANCELLED."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             return
@@ -227,6 +233,7 @@ class ServiceSaga:
 
     async def cancel(self, order_id: int) -> None:
         """Ручная отмена заказа. Только для PENDING / RESERVED."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             raise ValueError("Order not found")
@@ -270,6 +277,7 @@ class ServiceSaga:
 
     async def on_payment_refunded(self, order_id: int) -> None:
         """Получен payment.refunded → публикуем inventory.release (если ещё не) → CANCELLED."""
+        order_id = int(order_id)
         order = await self.repo.get(order_id)
         if order is None:
             return

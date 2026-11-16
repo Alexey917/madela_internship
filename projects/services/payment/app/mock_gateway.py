@@ -21,8 +21,8 @@ class ChargeResponse(BaseModel):
 async def charge(data: ChargeRequest) -> ChargeResponse:
     """ 
     Эмуляция платежного шлюза
-    - 80% - success
-    - 20% - fail 
+    - 60% - success
+    - 40% - fail 
     - 5% - имитация 500 (для retry)
     """
 
@@ -32,7 +32,7 @@ async def charge(data: ChargeRequest) -> ChargeResponse:
         # Имитация сетевой ошибки — 500
         raise HTTPException(status_code = 500, detail = "Gateway timeout")
 
-    if roll < 0.20:
+    if roll < 0.40:
         # Карта отклонена
         return ChargeResponse(
             external_id=f"ch_mock_{data.order_id}",
