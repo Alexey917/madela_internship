@@ -61,6 +61,7 @@ async def start_payment_consumer() -> None:
 
 
 async def _handle_inventory_event(routing_key: str, payload: dict) -> None:
+    order_id = int(order_id)
     order_id = payload.get("order_id")
     if not order_id:
         logger.warning("Missing order_id in %s: %s", routing_key, payload)

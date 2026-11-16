@@ -39,6 +39,24 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth()
 
+  function getCancelReason(order: Order): string {
+      const reason = (order as any).cancel_reason; // или order.cancel_reason, если добавишь в тип
+      switch (reason) {
+          case 'inventory_failed':
+              return 'Не удалось зарезервировать товар: недостаточно на складе. Средства не списаны.';
+          case 'payment_failed':
+              return 'Оплата не прошла. Средства не списаны.';
+          case 'timeout_inventory':
+              return 'Склад не ответил вовремя. Заказ отменён, средства не списаны.';
+          case 'released':
+              return 'Заказ отменён, товар возвращён на склад.';
+          case 'cancelled_by_user':
+              return 'Заказ отменён вами.';
+          default:
+              return 'Заказ отменён. Средства не списаны.';
+      }
+  }
+
   useEffect(() => {
     if (!open  || !user) return;
 
@@ -70,7 +88,8 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
     };
   }, [orderId, open, message]);
 
-  const isFinal = order?.status === 'completed' || order?.status === 'cancelled';
+  const status = order?.status?.toLowerCase();
+  const isFinal = status === 'completed' || status === 'cancelled' || status === 'failed';
 
   return (
     <Modal
@@ -90,7 +109,7 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {isFinal && order.status === 'completed' && (
+          {isFinal && status === 'completed' && (
             <Result
               status="success"
               title="Заказ успешно завершён!"
@@ -107,15 +126,11 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
             />
           )}
 
-          {isFinal && order.status === 'cancelled' && (
+          {isFinal && status === 'cancelled' && (
             <Result
               status="error"
               title="Заказ отменён"
-              subTitle={
-                order.items.length > 0
-                  ? 'Средства не списаны. Товары возвращены в наличие.'
-                  : 'Заказ отменён'
-              }
+              subTitle={getCancelReason(order)}
               icon={
                 <motion.div
                   initial={{ rotate: -180, opacity: 0 }}
@@ -123,7 +138,7 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
                   transition={{ duration: 0.5 }}
                 >
                   <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 72 }} />
-                </motion.div>
+              </motion.div>
               }
             />
           )}
@@ -132,14 +147,14 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
               <div style={{ marginTop: 16 }}>
-                <Tag color={STATUS_CONFIG[order.status].color} style={{ fontSize: 16, padding: '4px 12px' }}>
-                  {STATUS_CONFIG[order.status].icon} {STATUS_CONFIG[order.status].label}
+                <Tag color={STATUS_CONFIG[status  as OrderStatus].color} style={{ fontSize: 16, padding: '4px 12px' }}>
+                  {STATUS_CONFIG[status  as OrderStatus].icon} {STATUS_CONFIG[status  as OrderStatus].label}
                 </Tag>
               </div>
             </div>
           )}
 
-          {isFinal && order.status === 'failed' && (
+          {isFinal && status === 'failed' && (
             <Result
               status="error"
               title="Заказ не выполнен"
@@ -163,7 +178,7 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
             <Text strong>Прогресс SAGA:</Text>
             <Timeline
               style={{ marginTop: 16 }}
-              items={getTimelineItems(order.status)}
+              items={getTimelineItems(status  as OrderStatus)}
             />
           </div>
         </motion.div>

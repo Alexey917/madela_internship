@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { CatalogPage } from './pages/CatalogPage';
-// import { AdminPage } from './pages/AdminPage';
+import { AdminPage } from './pages/AdminPage';
 import { CartModal } from './components/CartModal';
 import type { Product } from './types';
 
@@ -96,9 +96,9 @@ function AppLayout() {
           <Route path="/" element={
             <ProtectedRoute><CatalogPage onBuy={addToCart} /></ProtectedRoute>
           } />
-          {/* <Route path="/admin" element={
+          <Route path="/admin" element={
             <ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>
-          } /> */}
+          } />
         </Routes>
       </Content>
 

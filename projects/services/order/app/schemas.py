@@ -33,5 +33,6 @@ class OrderRead(BaseModel):
     status: OrderStatus
     total_amount: Decimal
     items: list[OrderItemRead]
+    cancel_reason: str | None = None
     created_at: datetime
     updated_at: datetime

@@ -23,7 +23,10 @@ async def get_order(
     order = await repo.get(order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    return OrderRead.model_validate(order)
+
+    saga = await repo.get_saga_state(int(order_id)) 
+    result = OrderRead.model_validate(order)
+    return result.model_copy(update={"cancel_reason": saga if saga else None})
 
 
 @router.post("", response_model=OrderRead, status_code=status.HTTP_201_CREATED)

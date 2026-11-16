@@ -42,6 +42,7 @@ export interface Order {
     quantity: number;
     unit_price: string;
   }[];
+  cancel_reason: string | null;
   created_at: string;
   updated_at: string;
 }

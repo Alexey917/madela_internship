@@ -84,6 +84,12 @@ class OrderRepository:
         )
         return list(result.scalars().all())
 
+    async def get_saga_state(self, order_id: int) -> str | None:
+        saga_state = await self.session.execute(
+            select(SagaState.last_error).where(SagaState.order_id == order_id)
+        )
+        return saga_state.scalar_one_or_none()
+
         
 
 
