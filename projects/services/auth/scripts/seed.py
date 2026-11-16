@@ -7,7 +7,7 @@ from app.models import User, UserRole
 from app.security import hash_password
 
 SEED_USERS = [
-    {"email": "admin@shop.local", "password": "admin123", "role": UserRole.ADMIN},
+    {"email": "ageev7623@gmail.com", "password": "admin123", "role": UserRole.ADMIN},
     {"email": "pvpuvk@yandex.ru", "password": "user123", "role": UserRole.USER},
 ]
 
