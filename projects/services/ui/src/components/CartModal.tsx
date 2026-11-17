@@ -16,6 +16,9 @@ import { OrderStatusModal } from './OrderStatusModal';
 import type { Product } from '../types';
 import { getErrorMessage }from '../utils/errors'
 import { useAuth } from '../hooks/useAuthContext';
+import product_3 from '../assets/product_3.png'
+import product_1 from '../assets/product_1.png'
+import product_img from '../assets/product_img.png'
 
 const { Text } = Typography;
 
@@ -141,6 +144,13 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
                   ]}
                 >
                   <List.Item.Meta
+                    avatar={
+                      <img src={item.product.id % 3 === 0 
+                          ? product_3 : item.product.id % 2 === 0 
+                          ? product_img 
+                          : product_1} alt="Изображение" width={50} height={50} 
+                      />
+                    }
                     title={item.product.name}
                     description={
                       <Space>

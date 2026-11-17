@@ -158,7 +158,8 @@ export function OrderStatusModal({ orderId, open, onClose }: Props) {
             <Result
               status="error"
               title="Заказ не выполнен"
-              subTitle="Произошла ошибка при обработке. Попробуйте позже."
+              // subTitle="Произошла ошибка при обработке. Попробуйте позже."
+              subTitle={getCancelReason(order)}
             />
           )}
 

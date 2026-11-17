@@ -43,7 +43,7 @@ async def start_payment_consumer() -> None:
         "payment.events", ExchangeType.TOPIC, durable=True
     )
     
-    queue = await broker._channel.declare_queue("order.inventory-events", durable=True)
+    queue = await broker._channel.declare_queue("order.payment-events", durable=True)
     await queue.bind(exchange, routing_key="payment.succeeded")
     await queue.bind(exchange, routing_key="payment.failed")
     await queue.bind(exchange, routing_key="payment.refunded")

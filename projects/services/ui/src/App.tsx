@@ -30,7 +30,7 @@ function AppLayout() {
       }
       return [...prev, { product, quantity: 1 }];
     });
-    setCartOpen(true);
+    // setCartOpen(true);
   };
 
   const updateQuantity = (productId: number, quantity: number) => {

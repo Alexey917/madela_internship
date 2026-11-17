@@ -26,7 +26,11 @@ export function ProductCard({ product, onBuy }: Props) {
         styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
       >
         <div style={{ flex: 1 }}>
-          <img src={product.id % 3 === 0 ? product_3 : product.id % 2 === 0 ? product_img : product_1} alt="Изображение" width={200} height={200} />
+          <img src={product.id % 3 === 0 
+            ? product_3 : product.id % 2 === 0 
+            ? product_img 
+            : product_1} alt="Изображение" width={200} height={200} 
+          />
           <p style={{ color: '#666', fontSize: 13 }}>
             {product.publisher} · {product.min_players}–{product.max_players} игроков
             {product.play_time_minutes && ` · ${product.play_time_minutes} мин`}

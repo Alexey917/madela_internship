@@ -70,8 +70,8 @@ class StockRepository:
         if stock is None:
             return None
 
-        if stock.available < quantity:
-            return None
+        # if stock.available < quantity:
+        #     return None
 
         if stock.reserved < quantity:
             logger.warning(
