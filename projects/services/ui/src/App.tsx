@@ -53,42 +53,46 @@ function AppLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <div style={{ color: 'white', fontSize: 18, fontWeight: 600 }}>🎲 Board Games Shop</div>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[location.pathname]}
-            onClick={({ key }) => navigate(key)}
-            items={[
-              { key: '/', label: 'Каталог' },
-              ...(user?.role === 'admin' ? [{ key: '/admin', label: 'Админка' }] : []),
-            ]}
-            style={{ flex: 1, minWidth: 0 }}
-          />
-        </div>
+      <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{width: '1400px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 52, width: '380px', height: '64px' }}>
+            <h1 style={{ color: 'white', fontSize: 18, fontWeight: 600, flexShrink: 0  }}>🎲 Board Games Shop</h1>
+            {user?.role === 'admin' ? (
+              <Menu
+                theme="dark"
+                mode="horizontal"
+                selectedKeys={[location.pathname]}
+                onClick={({ key }) => navigate(key)}
+                items={[
+                  { key: '/', label: 'Каталог' },
+                  { key: '/admin', label: 'Админка' }
+                ]}
+                style={{ flex: 1, minWidth: 0 }}
+              />
+            ) : ("")} 
+          </div>
 
-        <Space>
-          {user && (
-            <>
-              <Button
-                type="text"
-                icon={<ShoppingCartOutlined />}
-                onClick={() => setCartOpen(true)}
-                style={{ color: 'white' }}
-              >
-                Корзина ({totalItems})
-              </Button>
-              <Tag color={user.role === 'admin' ? 'gold' : 'blue'} icon={<UserOutlined />}>
-                {user.email} ({user.role})
-              </Tag>
-              <Button type="text" icon={<LogoutOutlined />} onClick={logout} style={{ color: 'white' }}>
-                Выйти
-              </Button>
-            </>
-          )}
-        </Space>
+          <Space>
+            {user && (
+              <>
+                <Button
+                  type="text"
+                  icon={<ShoppingCartOutlined />}
+                  onClick={() => setCartOpen(true)}
+                  style={{ color: 'white' }}
+                >
+                  Корзина ({totalItems})
+                </Button>
+                <Tag color={user.role === 'admin' ? 'gold' : 'blue'} icon={<UserOutlined />}>
+                  {user.email} ({user.role})
+                </Tag>
+                <Button type="text" icon={<LogoutOutlined />} onClick={logout} style={{ color: 'white' }}>
+                  Выйти
+                </Button>
+              </>
+            )}
+          </Space>
+        </div>
       </Header>
 
       <Content style={{ padding: 24, maxWidth: 1400, margin: '0 auto', width: '100%' }}>
