@@ -51,7 +51,7 @@ export function AdminPage() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const data = await api.getProducts(1, 100);
+      const data = await api.getProductsAdmin(token, 1, 100);
       setProducts(data.items);
     } catch (e: unknown) {
       message.error(getErrorMessage(e));

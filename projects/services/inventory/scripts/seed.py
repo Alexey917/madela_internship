@@ -19,6 +19,22 @@ SEED_STOCK = [
     {"product_id": 10, "available": 8},   # Azul
     {"product_id": 11, "available": 14},   # Смертельные материалы
     {"product_id": 12, "available": 7},   # Морской бой
+
+    {"product_id": 13, "available": 12},   # Замки и зайчики
+    {"product_id": 14, "available": 10},   # Игра престолов
+    {"product_id": 15, "available": 7},   # Обитель тьмы
+
+    {"product_id": 16, "available": 6},   # Войны Чёрной Розы
+    {"product_id": 17, "available": 11},   # Взрывные котята
+    {"product_id": 18, "available": 4},   # Смешанный лес
+    {"product_id": 19, "available": 2},   # Root
+    {"product_id": 20, "available": 15},   # Ярость Дракулы
+
+    {"product_id": 21, "available": 20},   # Остров духов
+    {"product_id": 22, "available": 9},   # Цитадели Классика 
+    {"product_id": 23, "available": 8},   # Битва за Рокуган
+    {"product_id": 24, "available": 30},   # Монополия
+
 ]
 
 

@@ -26,6 +26,13 @@ export const api = {
   getProducts: (page = 1, size = 50): Promise<ProductListResponse> =>
     request(`/products?page=${page}&size=${size}`),
 
+  getProductsAdmin: (token: string, page = 1, size = 50): Promise<ProductListResponse> =>
+    request(`/products/admin?page=${page}&size=${size}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }),
+
   login: (email: string, password: string): Promise<{
     access_token: string;
     token_type: string;

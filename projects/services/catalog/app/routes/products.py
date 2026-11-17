@@ -17,6 +17,35 @@ router = APIRouter(prefix="/products", tags=["products"])
 logger = logging.Logger(__name__)
 
 
+@router.get("/admin", response_model=ProductListResponse)
+async def list_products_admin(
+    page: int = Query(1, ge = 1), 
+    size: int = Query(20, ge = 1, le = 100), 
+    repo: ProductRepository = Depends(get_repo),
+    cache: Redis = Depends(get_cache),
+) -> ProductListResponse:
+    cache_key = f"products:admin:page:{page}:size:{size}"
+
+    cached = await get_json(cache_key)
+
+    if cached is not None:
+        logger.info("CACHE HIT: %s", cache_key)
+        return ProductListResponse.model_validate(cached)
+
+    logger.info("CACHE MISS: %s", cache_key)
+    products, total = await repo.list_admin(page, size)
+
+    response = ProductListResponse(
+        items=[ProductRead.model_validate(product) for product in products],
+        page = page,
+        size = size,
+        total = total
+    )
+
+    await set_json(cache_key, response.model_dump(mode="json"), ttl=60)
+    return response
+
+
 @router.get("", response_model=ProductListResponse)
 async def list_products(
     page: int = Query(1, ge = 1), 
@@ -33,7 +62,7 @@ async def list_products(
         return ProductListResponse.model_validate(cached)
 
     logger.info("CACHE MISS: %s", cache_key)
-    products, total = await repo.list(page, size)
+    products, total = await repo.list_products(page, size)
 
     response = ProductListResponse(
         items=[ProductRead.model_validate(product) for product in products],

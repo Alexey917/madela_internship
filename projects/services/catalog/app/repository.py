@@ -11,7 +11,7 @@ class ProductRepository:
         self.session = session
 
 
-    async def list(self, page: int = 1, size: int = 20, only_active: bool = True) -> tuple[list[Product], int]:
+    async def list_products(self, page: int = 1, size: int = 20, only_active: bool = True) -> tuple[list[Product], int]:
         offset = (page - 1) * size
 
         base_filter = Product.is_active.is_(True) if only_active else None
@@ -28,6 +28,22 @@ class ProductRepository:
 
         if base_filter is not None:
             query = query.where(base_filter)
+
+        result = await self.session.execute(query)
+        products =  list(result.scalars().all())
+
+        return products, total
+
+
+    async def list_admin(self, page: int = 1, size: int = 20, only_active: bool = True) -> tuple[list[Product], int]:
+        offset = (page - 1) * size
+
+        query_count = select(func.count()).select_from(Product)
+
+        total_count = await self.session.execute(query_count)
+        total = total_count.scalar_one()
+
+        query = select(Product).order_by(Product.id).offset(offset).limit(size)
 
         result = await self.session.execute(query)
         products =  list(result.scalars().all())
