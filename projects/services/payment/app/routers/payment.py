@@ -54,7 +54,7 @@ async def refund_payment(
     if cached is not None:
         return JSONResponse(status_code=cached["status_code"], content=cached["body"])
 
-    payment = await repo.refund(payment_id)
+    payment = await repo.refund(payment_id, "cancelled_by_user")
     if payment is None:
         body = {"detail": "Cannot refund: payment not found or not succeeded"}
         await store_response(idem_key, 409, body)

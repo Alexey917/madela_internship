@@ -88,6 +88,7 @@ export function CartModal({ open, cart, onClose, onOrdered, onQuantityChange, on
 
   const handleCloseStatus = () => {
     setOrderId(null);
+    // отмена платежа
     onClose();
   };
 

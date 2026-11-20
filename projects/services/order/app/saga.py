@@ -180,7 +180,7 @@ class ServiceSaga:
             return
 
         await self.repo.update_saga_status(
-            order_id, SagaStatus.COMPENSATING, last_error=reason or "payment_failed"
+            order_id, SagaStatus.COMPENSATING, last_error="payment_failed"
         )
         await self.repo.update_status(order_id, OrderStatus.FAILED)
 

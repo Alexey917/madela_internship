@@ -43,7 +43,8 @@ class PaymentRepository:
             gateway_response: GatewayResponse = await charge_with_retry(order_id, amount)
         except Exception as exc:
             payment.payment_status = PaymentStatus.FAILED
-            payment.failure_reason = f"gateway_error: {type(exc).__name__}"
+            # payment.failure_reason = f"gateway_error: {type(exc).__name__}"
+            payment.failure_reason = "payment_failed"
             await enqueue_event(
                 self.session,
                 event_type="payment.failed",
