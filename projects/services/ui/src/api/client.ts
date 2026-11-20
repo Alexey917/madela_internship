@@ -1,4 +1,4 @@
-import type { Order, OrderCreate, ProductListResponse } from '../types';
+import type { Order, OrderCreate, ProductListResponse, Product } from '../types';
 
 const API_BASE = '/api';
 
@@ -25,6 +25,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   getProducts: (page = 1, size = 50): Promise<ProductListResponse> =>
     request(`/products?page=${page}&size=${size}`),
+
+  getProductById: (id: number): Promise<Product> =>
+    request(`/products/${id}`),
 
   getProductsAdmin: (token: string, page = 1, size = 50): Promise<ProductListResponse> =>
     request(`/products/admin?page=${page}&size=${size}`, {

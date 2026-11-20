@@ -28,14 +28,18 @@ import { api } from '../api/client';
 import { useAuth } from '../hooks/useAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import type { Product, Stock } from '../types';
-import type { TableProps } from 'antd';
+import type { TableProps, GetProps  } from 'antd';
 
 const { Title } = Typography;
+type SearchProps = GetProps<typeof Input.Search>;
+
+const { Search } = Input;
 
 interface EditState {
   mode: 'create' | 'edit';
   product?: Product;
 }
+
 
 export function AdminPage() {
   const { message } = App.useApp();
@@ -45,6 +49,23 @@ export function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [form] = Form.useForm();
+
+  const onSearch: SearchProps['onSearch'] = async (value, _e) => {
+    if(!value) {
+      loadProducts()
+    } else {
+      setLoading(true);
+      try {
+        const data = await api.getProductById(+value);
+        console.log(data)
+        setProducts([data]);
+      } catch (e: unknown) {
+        message.error(getErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const token = user?.token ?? '';
 
@@ -260,6 +281,9 @@ export function AdminPage() {
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Title level={2} style={{ margin: 0 }}>Управление товарами</Title>
+        </Col>
+        <Col>
+          <Search type="number" placeholder="Поиск товара по id" onSearch={onSearch} enterButton />
         </Col>
         <Col>
           <Space>

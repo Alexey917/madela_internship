@@ -22,10 +22,10 @@ export function ProductCard({ product, onBuy }: Props) {
     >
       <Card
         title={product.name}
-        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+        style={{ minHeight: '300px', display: 'flex', flexDirection: 'column' }}
         styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
       >
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minHeight: '300px' }}>
           <img src={product.id % 3 === 0 
             ? product_3 : product.id % 2 === 0 
             ? product_img 
