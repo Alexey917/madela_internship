@@ -90,13 +90,13 @@ class ServiceSaga:
             return
 
         await self.repo.update_saga_status(
-            order_id, SagaStatus.COMPENSATING, last_error=reason or "inventory_failed"
+            order_id, SagaStatus.COMPENSATING, last_error="inventory_failed"
         )
         await self.repo.update_status(order_id, OrderStatus.FAILED)
 
         # Payment ещё не вызывался — компенсировать нечего
         await self.repo.update_saga_status(
-            order_id, SagaStatus.CANCELLED, last_error=reason or "inventory_failed"
+            order_id, SagaStatus.CANCELLED, last_error="inventory_failed"
         )
         await self.repo.update_status(order_id, OrderStatus.CANCELLED)
 
