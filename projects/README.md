@@ -1,12 +1,6 @@
 # 🎲 Board Games Shop
 
-![Python](https://ДОМЕН/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://ДОМЕН/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![React](https://ДОМЕН/badge/React-TypeScript-61DAFB?style=flat-square&logo=react&logoColor=black)
-![PostgreSQL](https://ДОМЕН/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![RabbitMQ](https://ДОМЕН/badge/RabbitMQ-3.13-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)
-![Redis](https://ДОМЕН/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
-![Nginx](https://ДОМЕН/badge/Nginx-Gateway-009639?style=flat-square&logo=nginx&logoColor=white)
+`Python 3.12` · `FastAPI` · `React + TypeScript` · `PostgreSQL 16` · `RabbitMQ 3.13` · `Redis 7` · `Nginx` · `Docker`
 
 
 > Микросервисный демонстрационный интернет-магазин настольных игр с реализацией распределённых транзакций по паттерну **SAGA (Orchestration)**, асинхронным обменом через **RabbitMQ** и эмуляцией платёжного шлюза.
