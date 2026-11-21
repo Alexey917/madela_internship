@@ -182,6 +182,10 @@ poetry run pytest --cov=app --cov-fail-under=70
 - Grafana: http://localhost:3001 (admin/admin)
 
 ![Grafana](docs/screenshots/metrics.png)
+![Errors](docs/screenshots/errors.png)
+![Queues](docs/screenshots/queues.png)
+![Requests](docs/screenshots/quantity_requests.png)
+![Order](docs/screenshots/quantity_request_order.png)
 
 ---
 
