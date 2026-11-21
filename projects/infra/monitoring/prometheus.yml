@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "catalog"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["catalog:8000"]
+
+  - job_name: "inventory"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["inventory:8000"]
+
+  - job_name: "payment"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["payment:8000"]
+
+  - job_name: "order"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["order:8000"]
+
+  - job_name: "notification"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["notification:8000"]
+
+  - job_name: "auth"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["auth:8000"]
+
+  - job_name: "rabbitmq"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["rabbitmq:15692"]

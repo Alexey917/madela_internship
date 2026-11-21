@@ -176,6 +176,15 @@ poetry run pytest --cov=app --cov-fail-under=70
 
 ---
 
+## Мониторинг
+
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3001 (admin/admin)
+
+![Grafana](docs/screenshots/metrics.png)
+
+---
+
 ## 📄 Лицензия
 
 Учебный проект, разработанный в рамках стажировки.

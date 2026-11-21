@@ -132,6 +132,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: catalog
       RABBITMQ_DEFAULT_PASS: catalog
+    command: ["sh", "-c", "rabbitmq-plugins enable rabbitmq_prometheus && rabbitmq-server"]
     ports:
       - "5673:5672"
       - "15673:15672"
@@ -242,6 +243,37 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    depends_on:
+      - catalog
+      - inventory
+      - payment
+      - order
+      - notification
+      - auth
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
 
 volumes:
   auth_pg_data:
