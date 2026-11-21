@@ -163,6 +163,19 @@ poetry run pytest --cov=app --cov-fail-under=70
 
 ---
 
+## Postman
+
+Коллекция для сквозного сценария:
+- `postman/Board Game Shop.postman_environment.json`
+- `postman/Board Game Shop.postman_environment.json`
+
+Импорт: Postman → Import → оба файла → выбери окружение `Shop Local`.
+
+Сценарий: Login → List products → Create order (happy) → polling до `COMPLETED`
+→ Create order (fail) → polling до `CANCELLED`.
+
+---
+
 ## 📄 Лицензия
 
 Учебный проект, разработанный в рамках стажировки.
