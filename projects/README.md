@@ -1,18 +1,20 @@
 # 🎲 Board Games Shop
 
-![Python](https://shields.io)
-![FastAPI](https://shields.io)
-![React](https://shields.io)
-![PostgreSQL](https://shields.io)
-![RabbitMQ](https://shields.io)
-![Redis](https://shields.io)
-![Nginx](https://shields.io)
+<p align="left">
+  <img src="https://shields.io" alt="Python" />
+  <img src="https://shields.io" alt="FastAPI" />
+  <img src="https://shields.io" alt="React" />
+  <img src="https://shields.io" alt="PostgreSQL" />
+  <img src="https://shields.io" alt="RabbitMQ" />
+  <img src="https://shields.io" alt="Redis" />
+  <img src="https://shields.io" alt="Nginx" />
+</p>
 
 > Микросервисный демонстрационный интернет-магазин настольных игр с реализацией распределённых транзакций по паттерну **SAGA (Orchestration)**, асинхронным обменом через **RabbitMQ** и эмуляцией платёжного шлюза.
 
 ---
 
-##📑 Содержание
+## 📑 Содержание
 - [Технологический стек](#-технологический-стек)
 - [Архитектура](#-архитектура)
 - [Быстрый старт](#-быстрый-старт)
