@@ -171,7 +171,7 @@ poetry run pytest --cov=app --cov-fail-under=70
 
 ---
 
-## Postman
+## 📮 Postman
 
 Коллекция для сквозного сценария:
 - `postman/Board Game Shop.postman_environment.json`
@@ -184,7 +184,7 @@ poetry run pytest --cov=app --cov-fail-under=70
 
 ---
 
-## Мониторинг
+## 📊 Мониторинг
 
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3001 (admin/admin)
