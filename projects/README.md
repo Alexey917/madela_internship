@@ -37,7 +37,12 @@
 ## 🏗 Архитектура
 
 Подробные схемы взаимодействия сервисов и описание шагов оркестрации:
-- 📐 **[C4 Context + Container](docs/architecture.md)** — обзор компонентов системы и потоков данных.
+- 📐 **[C4 (drawio)](docs/с4.drawio)** - исходник. Можно посмотреть целиком: ```text
+   Скачать ──▶ Перейти на https://app.diagrams.net/ ──▶ Файл ──▶ Открыть из ──▶ это устройство ──▶ с4.drawio
+   ```
+- 📐 **[C4 (context)](docs/screenshots/context.png)** - схема на уровне контекста
+- 📐 **[C4 (container)](docs/screenshots/container.png)** - схема на уровне контейнера
+- 📐 **[C4 (component)](docs/screenshots/component.png)** - схема на уровне компонента
 - 🔄 **[SAGA-сценарии (Happy + Compensation)](docs/saga.md)** — диаграммы последовательности успешного заказа и компенсации.
 
 ---
