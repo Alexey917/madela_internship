@@ -1,0 +1,284 @@
+services:
+  notification-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+      POSTGRES_DB: notifications_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notifications_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth
+      - catalog
+      - inventory
+      - payment
+      - order
+
+  ui:
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"    # прямой доступ (для отладки)
+  
+  auth-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: auth_db
+    ports: ["5438:5432"]
+    volumes: [auth_pg_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+
+  order-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: order
+      POSTGRES_PASSWORD: order
+      POSTGRES_DB: orders_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - order_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order -d orders_db"]
+
+  inventory-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - inventory_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory_db"]
+
+  catalog-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+      POSTGRES_DB: catalog_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - catalog_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  
+  payment-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+      POSTGRES_DB: payments_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payments_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  auth:
+    build: { context: ./services/auth, dockerfile: Dockerfile }
+    environment:
+      DATABASE_URL: postgresql+asyncpg://auth:auth@auth-postgres:5432/auth_db
+      SERVICE_NAME: auth-service
+      JWT_SECRET: super-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "60"
+    ports: ["8006:8000"]
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: catalog
+      RABBITMQ_DEFAULT_PASS: catalog
+    command: ["sh", "-c", "rabbitmq-plugins enable rabbitmq_prometheus && rabbitmq-server"]
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s 
+
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    env_file:
+      - ./services/notification/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://notification:notification@notification-postgres:5432/notifications_db
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      SERVICE_NAME: notification-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8005:8000"
+    depends_on:
+      notification-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  order:
+    build:
+      context: ./services/order
+      dockerfile: Dockerfile
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: postgresql+asyncpg://order:order@order-postgres:5432/orders_db
+      REDIS_URL: redis://redis:6379/3
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      SERVICE_NAME: order-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8004:8000"
+    depends_on:
+      order-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  inventory:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://inventory:inventory@inventory-postgres:5432/inventory_db
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/0
+      SERVICE_NAME: inventory-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8002:8000"
+    depends_on:
+      inventory-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  catalog:
+    build:
+      context: ./services/catalog
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://catalog:catalog@catalog-postgres:5432/catalog_db
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/0
+      SERVICE_NAME: catalog-service
+      LOG_LEVEL: INFO
+    ports:
+      - "8001:8000"
+    depends_on:
+      catalog-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  
+  payment:
+    build:
+      context: ./services/payment
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://payment:payment@payment-postgres:5432/payments_db
+      REDIS_URL: redis://redis:6379/2
+      RABBITMQ_URL: amqp://catalog:catalog@rabbitmq:5672/
+      MOCK_GATEWAY_URL: http://localhost:8000/mock-gateway
+      SERVICE_NAME: payment-service
+      LOG_LEVEL: INFO  
+    ports:
+      - "8003:8000"
+    depends_on:
+      payment-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    depends_on:
+      - catalog
+      - inventory
+      - payment
+      - order
+      - notification
+      - auth
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  auth_pg_data:
+  notification_pg_data:
+  inventory_pg_data:
+  catalog_pg_data:
+  payment_pg_data:
+  order_pg_data:
